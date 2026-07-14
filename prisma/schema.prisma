@@ -1,0 +1,88 @@
+// Esquema de base de datos para Prisma ORM
+// Gestiona el ERP de la Barbería "El Nuevo Stylo"
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Modelo que representa tanto a Administradores como a Barberos
+model Usuario {
+  id                 Int         @id @default(autoincrement())
+  nombre             String
+  usuario            String      @unique
+  contrasena_hash    String
+  rol                String      // "ADMINISTRADOR" o "BARBERO"
+  preferencias_tema  String      @default("{\"colorFondo\":\"#0f172a\",\"colorTexto\":\"#f8fafc\",\"colorAcento\":\"#0284c7\",\"colorTarjeta\":\"#1e293b\"}")
+
+  // Estados para gestión operativa y borrado lógico
+  activo             Boolean     @default(true)
+  eliminado          Boolean     @default(false)
+
+  fecha_creacion     DateTime    @default(now())
+  citas              Cita[]
+  auditorias         Auditoria[]
+}
+
+
+
+// Catálogo de Cortes y Combos
+model Servicio {
+  id             Int      @id @default(autoincrement())
+  nombre         String
+  descripcion    String
+  precio         Float
+  activo         Boolean  @default(true)
+  citas          Cita[]
+}
+
+// Reservas de citas por parte de clientes
+model Cita {
+  id               Int      @id @default(autoincrement())
+  nombre_cliente   String
+  telefono_cliente String
+  correo_cliente   String
+  fecha_hora       DateTime
+  barbero_id       Int
+  barbero          Usuario  @relation(fields: [barbero_id], references: [id])
+  servicio_id      Int
+  servicio         Servicio @relation(fields: [servicio_id], references: [id])
+  estado           String   @default("PENDIENTE") // "PENDIENTE", "COMPLETADA", "CANCELADA"
+  fecha_creacion   DateTime @default(now())
+  pago             Pago?
+}
+
+// Catálogo de Métodos de Pago (Efectivo, Transferencia, Pago Móvil, Tarjeta)
+model MetodoPago {
+  id     Int    @id @default(autoincrement())
+  nombre String @unique
+  activo Boolean @default(true)
+  pagos  Pago[]
+}
+
+// Registro financiero de cobro de una cita completada
+model Pago {
+  id             Int        @id @default(autoincrement())
+  cita_id        Int        @unique
+  cita           Cita       @relation(fields: [cita_id], references: [id])
+  metodo_pago_id Int
+  metodo_pago    MetodoPago @relation(fields: [metodo_pago_id], references: [id])
+  referencia     String?    // Número de referencia para pagos electrónicos
+  monto_cobrado  Float
+  propina        Float      @default(0)
+  fecha_pago     DateTime   @default(now())
+}
+
+// Historial para control y auditoría de acciones administrativas u operativas
+model Auditoria {
+  id             Int      @id @default(autoincrement())
+  barbero_id     Int
+  barbero        Usuario  @relation(fields: [barbero_id], references: [id])
+  fecha_registro DateTime @default(now())
+  accion         String   // "LOGIN", "REGISTRO_VENTA", "MODIFICACION_TEMA", etc.
+  detalles       String
+}

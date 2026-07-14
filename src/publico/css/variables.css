@@ -1,0 +1,41 @@
+/* Variables de CSS globales para el tema visual del ERP de la barbería */
+/* Permite personalización dinámica mediante Javascript inyectando valores desde la base de datos */
+
+:root {
+  /* Paleta de colores base por defecto (Tema Slate Oscuro Premium) */
+  --color-fondo: #0f172a;
+  --color-texto: #f8fafc;
+  --color-texto-secundario: #94a3b8;
+  --color-acento: #0284c7;
+  --color-acento-hover: #0369a1;
+  --color-tarjeta: #1e293b;
+  --color-borde: #334155;
+  --color-exito: #10b981;
+  --color-error: #ef4444;
+  --color-advertencia: #f59e0b;
+
+  /* Tipografía y Transiciones */
+  --fuente-principal: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --transicion-suave: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --sombra-tarjeta: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --radio-borde: 16px;
+  --difuminado-glass: blur(12px);
+}
+
+/* Clases de utilidad comunes */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  font-family: var(--fuente-principal);
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Efectos de Glassmorphism */
+.efecto-glass {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: var(--difuminado-glass);
+  -webkit-backdrop-filter: var(--difuminado-glass);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}

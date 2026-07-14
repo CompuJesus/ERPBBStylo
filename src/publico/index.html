@@ -1,0 +1,2448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="description" content="ERP de la Barbería El Nuevo Stylo - Gestión profesional y reservas online">
+  <title>Barbería El Nuevo Stylo - Sistema de Gestión</title>
+  <link rel="stylesheet" href="css/index.css">
+  <style>
+    /* Estilos adicionales de control de vistas */
+    .vista { display: none; }
+    .vista.activa { display: flex; }
+
+    #vista-login { flex-direction: column; min-height: 100vh; justify-content: center; align-items: center; padding: 1rem; }
+
+    .logo-glow {
+      animation: resplandor 3s ease-in-out infinite alternate;
+      filter: drop-shadow(0 0 18px rgba(251, 191, 36, 0.7));
+    }
+    @keyframes resplandor {
+      from { filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.4)); transform: scale(1); }
+      to   { filter: drop-shadow(0 0 28px rgba(251, 191, 36, 0.9)); transform: scale(1.03); }
+    }
+
+    .btn-cliente-reserva {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      color: #000;
+      font-size: 1.05rem;
+      font-weight: 800;
+      padding: 1rem 1.5rem;
+      border-radius: 16px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+      transition: all 0.3s ease;
+      width: 100%;
+      animation: latido 2s ease-in-out infinite;
+    }
+    @keyframes latido {
+      0%, 100% { box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45); }
+      50%       { box-shadow: 0 8px 30px rgba(245, 158, 11, 0.75); }
+    }
+    .btn-cliente-reserva:hover { transform: translateY(-3px); background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+
+    .divider { display: flex; align-items: center; gap: 1rem; color: var(--color-texto-secundario); font-size: 0.85rem; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--color-borde); }
+
+    /* Calendario */
+    .btn-nav-calendario {
+      background: transparent;
+      border: 1px solid var(--color-borde);
+      color: var(--color-texto);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: var(--transicion-suave);
+    }
+    .btn-nav-calendario:hover { background: var(--color-acento); border-color: var(--color-acento); }
+
+    .panel-seleccion-cita {
+      display: none;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--color-acento);
+      border-radius: 20px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      animation: deslizarEntrada 0.4s ease;
+    }
+    .panel-seleccion-cita.visible { display: block; }
+
+    .grid-barberos-cita { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.8rem; margin-bottom: 1.5rem; }
+    .tarjeta-barbero-cita {
+      background: var(--color-tarjeta);
+      border: 1px solid var(--color-borde);
+      border-radius: 12px;
+      padding: 0.9rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transicion-suave);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .tarjeta-barbero-cita:hover { border-color: var(--color-acento); background: rgba(2,132,199,0.1); }
+    .tarjeta-barbero-cita.seleccionado { border-color: var(--color-acento); background: var(--color-acento); }
+    .avatar-mini { font-size: 1.5rem; margin-bottom: 0.3rem; }
+    .subtitulo-panel { font-size: 1rem; font-weight: 700; margin-bottom: 0.8rem; color: var(--color-texto-secundario); }
+
+    /* Métricas */
+    .grid-metricas { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; }
+    .tarjeta-metrica {
+      background: var(--color-tarjeta);
+      border: 1px solid var(--color-borde);
+      border-radius: var(--radio-borde);
+      padding: 1.5rem;
+      box-shadow: var(--sombra-tarjeta);
+    }
+    .tarjeta-metrica h4 { font-size: 0.8rem; color: var(--color-texto-secundario); text-transform: uppercase; margin-bottom: 0.5rem; }
+    .tarjeta-metrica .valor { font-size: 1.7rem; font-weight: 800; color: var(--color-acento); }
+
+    /* Formulario CRUD */
+    .formulario-crear { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: flex-end; background: var(--color-tarjeta); border: 1px solid var(--color-borde); border-radius: var(--radio-borde); padding: 1.5rem; }
+    .campo-form { display: flex; flex-direction: column; gap: 0.4rem; }
+    .campo-form label { font-size: 0.85rem; color: var(--color-texto-secundario); }
+
+    /* Badge */
+    .badge { padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
+    .badge-activo { background: rgba(16,185,129,0.15); color: var(--color-exito); }
+    .badge-inactivo { background: rgba(239,68,68,0.1); color: var(--color-error); }
+    .badge-admin { background: rgba(2,132,199,0.15); color: var(--color-acento); }
+    .badge-barbero { background: rgba(245,158,11,0.15); color: var(--color-advertencia); }
+    .badge-cajero { background: rgba(139,92,246,0.15); color: #a78bfa; }
+    .badge-otro { background: rgba(107,114,128,0.15); color: #9ca3af; }
+
+    /* Botones pequeños */
+    .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: var(--transicion-suave); }
+    .btn-sm-rojo { background: rgba(239,68,68,0.1); color: var(--color-error); border: 1px solid var(--color-error); }
+    .btn-sm-rojo:hover { background: var(--color-error); color: white; }
+    .btn-sm-verde { background: rgba(16,185,129,0.15); color: var(--color-exito); border: 1px solid var(--color-exito); }
+    .btn-sm-verde:hover { background: var(--color-exito); color: white; }
+    .btn-sm-azul { background: rgba(2,132,199,0.15); color: var(--color-acento); border: 1px solid var(--color-acento); }
+    .btn-sm-azul:hover { background: var(--color-acento); color: white; }
+
+    /* Filtros */
+    .filtros-auditoria { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; background: var(--color-tarjeta); border: 1px solid var(--color-borde); border-radius: var(--radio-borde); padding: 1.5rem; }
+    .filtros-auditoria .campo-form { min-width: 140px; flex: 1; }
+    .barra-progreso { background: var(--color-borde); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 0.4rem; }
+    .barra-relleno { height: 100%; border-radius: 4px; background: var(--color-acento); transition: width 0.5s ease; }
+    .barra-relleno.verde { background: var(--color-exito); }
+
+    /* Contenido Barbero */
+    .contenido-barbero-dinamico { max-width: 900px; width: 92%; margin: 1.5rem auto; display: flex; flex-direction: column; gap: 1.5rem; }
+    .tarjeta-panel-barbero-full { background: var(--color-tarjeta); border: 1px solid var(--color-borde); border-radius: var(--radio-borde); padding: 2rem; box-shadow: var(--sombra-tarjeta); }
+    .tarjeta-panel-barbero-full h2 { font-size: 1.3rem; font-weight: 800; border-bottom: 1px solid var(--color-borde); padding-bottom: 0.8rem; margin-bottom: 1.5rem; }
+
+    /* Inputs de color */
+    input[type="color"] { height: 44px; padding: 2px; border-radius: 8px; cursor: pointer; background: transparent; border: 1px solid var(--color-borde); }
+  </style>
+</head>
+<body>
+
+<!-- =====================================================
+     VISTA 1: LOGIN UNIFICADO (Pantalla Principal)
+     ===================================================== -->
+<div id="vista-login" class="vista activa">
+  <div class="contenedor-entrada">
+
+    <!-- Logo dinámico con glow animado -->
+    <div class="contenedor-logo">
+      <img src="logo.png" alt="Logo Barbería El Nuevo Stylo" class="logo-imagen logo-glow">
+    </div>
+
+    <!-- Formulario de login -->
+    <form id="formulario-login">
+      <div style="display:flex; flex-direction:column; gap:0.4rem;">
+        <label for="login-usuario">Usuario</label>
+        <input type="text" id="login-usuario" placeholder="Ej: admin" autocomplete="username" required>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:0.4rem;">
+        <label for="login-contrasena">Contraseña</label>
+        <div class="campo-contrasena">
+          <input type="password" id="login-contrasena" placeholder="••••••••" autocomplete="current-password" required>
+          <button type="button" class="btn-ojo" tabindex="-1" onclick="toggleOjo('login-contrasena', this)" title="Mostrar/Ocultar contraseña">👁</button>
+        </div>
+      </div>
+      <div id="login-error" style="color:var(--color-error); font-size:0.9rem; text-align:center; display:none;"></div>
+      <button type="submit" class="btn" style="width:100%; margin-top:0.5rem;">Iniciar Sesión</button>
+    </form>
+
+    <!-- Separador -->
+    <div class="divider">o si eres cliente</div>
+
+    <!-- Botón de reserva para clientes (llamativo, animado) -->
+    <button id="btn-abrir-reservas" class="btn-cliente-reserva">
+      ✂️ ¿Quieres una cita? ¡Reserva aquí!
+    </button>
+
+    <p style="font-size:0.75rem; color:var(--color-texto-secundario); text-align:center;">
+      No necesitas cuenta para reservar una cita.
+    </p>
+  </div>
+</div>
+
+<!-- =====================================================
+     VISTA 2: PORTAL DE RESERVAS (Clientes / Invitados)
+     ===================================================== -->
+<div id="vista-reservas" class="vista" style="flex-direction:column; min-height:100vh;">
+
+  <!-- Encabezado de reservas -->
+  <header style="display:flex; justify-content:space-between; align-items:center; padding:1rem 1.5rem; border-bottom:1px solid var(--color-borde); background:rgba(30,41,59,0.4); backdrop-filter:blur(12px);">
+    <div style="font-size:1.3rem; font-weight:800; color:var(--color-acento);">
+      💈 El Nuevo Stylo
+    </div>
+    <button class="btn btn-secundario" style="padding:0.5rem 1rem; font-size:0.9rem;" onclick="volverLogin()">← Regresar</button>
+  </header>
+
+  <main style="max-width:900px; width:92%; margin:2rem auto; display:flex; flex-direction:column; gap:2rem; padding-bottom:3rem;">
+
+    <div style="text-align:center;">
+      <h1 style="font-size:2rem; font-weight:800; margin-bottom:0.5rem;">Reserva tu Cita</h1>
+      <p style="color:var(--color-texto-secundario);">Selecciona el día que prefieres y te mostramos los horarios disponibles.</p>
+    </div>
+
+    <!-- CALENDARIO VISUAL INTERACTIVO -->
+    <div class="contenedor-reservas" style="display:block;">
+      <div class="calendario-interactivo">
+        <div class="calendario-cabecera">
+          <button class="btn-nav-calendario" id="btn-mes-anterior">&#8249;</button>
+          <h3 id="titulo-calendario">Julio 2026</h3>
+          <button class="btn-nav-calendario" id="btn-mes-siguiente">&#8250;</button>
+        </div>
+        <div class="calendario-cuerpo" id="cuerpo-calendario">
+          <!-- Renderizado por JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL UNIFICADO: Se despliega al seleccionar un día -->
+    <div id="panel-seleccion-cita" class="panel-seleccion-cita">
+      <h2 style="font-size:1.2rem; font-weight:800; margin-bottom:1.5rem;">
+        📅 Cita para el <span id="fecha-seleccionada-label">—</span>
+      </h2>
+
+      <!-- Paso A: Selección de Barbero -->
+      <div class="subtitulo-panel">1. Elige tu Barbero</div>
+      <div id="grid-barberos-cita" class="grid-barberos-cita">
+        <p style="color:var(--color-texto-secundario); font-size:0.9rem;">Cargando barberos...</p>
+      </div>
+
+      <!-- Paso B: Selección de Hora -->
+      <div class="subtitulo-panel" style="margin-top:1rem;">2. Elige la Hora Disponible</div>
+      <div id="grid-horas-cita" class="grid-horas" style="margin-bottom:1.5rem;">
+        <p style="color:var(--color-texto-secundario); font-size:0.9rem;">Selecciona un barbero primero.</p>
+      </div>
+
+      <!-- Paso C: Datos del cliente -->
+      <div class="subtitulo-panel">3. Tus Datos de Contacto</div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+          <label>Nombre completo</label>
+          <input type="text" id="cita-nombre" placeholder="Ej: Carlos Mendoza">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+          <label>Teléfono <span style="color:var(--color-texto-secundario); font-size:0.8rem;">(con código de país)</span></label>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <select id="cita-prefijo" style="width:110px; flex-shrink:0; font-size:0.9rem;">
+              <option value="+57">🇨🇴 +57</option>
+              <option value="+58">🇻🇪 +58</option>
+              <option value="+1">🇺🇸 +1</option>
+              <option value="+34">🇪🇸 +34</option>
+              <option value="+52">🇲🇽 +52</option>
+              <option value="+51">🇵🇪 +51</option>
+              <option value="+55">🇧🇷 +55</option>
+              <option value="+54">🇦🇷 +54</option>
+            </select>
+            <input type="tel" id="cita-telefono" placeholder="Ej: 412 1234567" style="flex:1;" pattern="[0-9\s]{7,15}" inputmode="numeric">
+          </div>
+          <span style="font-size:0.75rem; color:var(--color-texto-secundario);">Ej: +58 412 1234567 · +57 300 123 4567</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+          <label>Correo electrónico</label>
+          <input type="email" id="cita-correo" placeholder="Ej: carlos@correo.com">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+          <label>Servicio deseado</label>
+          <select id="cita-servicio">
+            <option value="">Cargando servicios...</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="cita-error" style="color:var(--color-error); font-size:0.9rem; margin-bottom:1rem; display:none;"></div>
+      <button id="btn-confirmar-cita" class="btn btn-llamativo" style="width:100%;">✅ Confirmar Cita</button>
+    </div>
+
+    <!-- Confirmación exitosa -->
+    <div id="alerta-cita-exito" style="display:none; background:rgba(16,185,129,0.1); border:1px solid var(--color-exito); border-radius:var(--radio-borde); padding:2rem; text-align:center; animation:deslizarEntrada 0.5s ease;">
+      <div style="font-size:3rem; margin-bottom:1rem;">🎉</div>
+      <h2 style="font-size:1.5rem; margin-bottom:0.5rem;">¡Cita Reservada!</h2>
+      <p id="cita-exito-detalle" style="color:var(--color-texto-secundario);"></p>
+      <button class="btn" style="margin-top:1.5rem;" onclick="reiniciarReservas()">Hacer otra reserva</button>
+    </div>
+  </main>
+</div>
+
+<!-- =====================================================
+     VISTA 3: PANEL BARBERO
+     ===================================================== -->
+<div id="vista-barbero" class="vista" style="flex-direction:column; min-height:100vh;">
+  <!-- Cabecera del Barbero — Centrada y responsiva -->
+  <header class="header-barbero">
+    <!-- Fila 1: Marca + Navegación -->
+    <div class="header-barbero-fila1">
+      <div style="font-weight:800; font-size:1.1rem; color:var(--color-acento);">💈 El Nuevo Stylo</div>
+      <nav style="display:flex; gap:0.5rem;">
+        <button class="btn-menu-barbero activo" id="btn-barbero-facturacion" onclick="cambiarSeccionBarbero('sec-barbero-facturacion')">💰 Facturar</button>
+        <!-- Badge de citas pendientes -->
+        <button class="btn-menu-barbero btn-citas-badge" id="btn-barbero-citas" onclick="cambiarSeccionBarbero('sec-barbero-citas')">
+          🔔 Citas
+          <span id="badge-citas" class="badge-notif" style="display:none;">0</span>
+        </button>
+        <button class="btn-menu-barbero" id="btn-barbero-historial" onclick="cambiarSeccionBarbero('sec-barbero-historial')">📜 Mi Historial</button>
+      </nav>
+    </div>
+    <!-- Fila 2: Tasas de cambio centradas -->
+    <div class="header-barbero-fila2">
+      <div class="widget-tasas-barbero">
+        <span style="color:var(--color-texto-secundario); font-weight:700; font-size:0.8rem;">Tasa Oficial:</span>
+        <span style="font-size:0.8rem;">💵 1$ = <span id="ref-usd-cop" style="font-weight:700; color:var(--color-acento);">—</span> COP</span>
+        <span style="font-size:0.8rem;">🇻🇪 1$ = <span id="ref-usd-ves" style="font-weight:700; color:var(--color-acento);">—</span> VES</span>
+      </div>
+    </div>
+    <!-- Fila 3: Saludo + Ajustes + Salir -->
+    <div class="header-barbero-fila3">
+      <span style="color:var(--color-texto-secundario); font-size:0.9rem;">Hola, <strong id="barbero-nombre" style="color:var(--color-acento);"></strong></span>
+      <button class="btn-nav-calendario" style="padding:0.4rem; border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center;" onclick="cambiarSeccionBarbero('sec-barbero-ajustes')" title="Ajustes de Perfil y Tema">⚙️</button>
+      <button class="btn btn-peligro" style="padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </header>
+
+  <div class="contenido-barbero-dinamico">
+
+    <!-- SUBSECCIÓN: REGISTRO DE TRABAJO (FACTURACIÓN RÁPIDA) -->
+    <div id="sec-barbero-facturacion" class="subseccion-barbero activa">
+      <div class="tarjeta-panel-barbero-full">
+        <h2>💰 Registrar Trabajo Realizado</h2>
+        <form id="formulario-factura" class="formulario-factura">
+          
+          <!-- Selección de múltiples servicios con botones -->
+          <div class="campo-form-barbero">
+            <label style="font-weight:700; margin-bottom:0.5rem; display:block;">1. Selecciona los servicios realizados (Suma automática)</label>
+            <div id="btn-grid-servicios" class="grid-botones-factura">
+              <!-- Renderizado por JS -->
+            </div>
+          </div>
+
+          <!-- Selección del método de pago con botones -->
+          <div class="campo-form-barbero" style="margin-top:1rem;">
+            <label style="font-weight:700; margin-bottom:0.5rem; display:block;">2. Elige el método de pago</label>
+            <div id="btn-grid-pagos" class="grid-pagos-factura">
+              <!-- Renderizado por JS -->
+            </div>
+          </div>
+
+          <!-- Propina Controlada -->
+          <div class="campo-form-barbero" style="margin-top:1rem;">
+            <label style="font-weight:700; margin-bottom:0.5rem; display:block;">3. Propina para el Barbero (COP)</label>
+            <div class="contenedor-propina-botones">
+              <button type="button" class="btn-propina seleccionado" onclick="cambiarPropinaRapida(0, this)">Sin propina</button>
+              <button type="button" class="btn-propina" onclick="cambiarPropinaRapida(0.1, this)">10%</button>
+              <button type="button" class="btn-propina" onclick="cambiarPropinaRapida(0.15, this)">15%</button>
+              <button type="button" class="btn-propina" onclick="cambiarPropinaRapida(0.2, this)">20%</button>
+              <button type="button" class="btn-propina" id="btn-propina-pers" onclick="activarPropinaPersonalizada(this)">Personalizado</button>
+            </div>
+            <!-- Input de propina personalizada visible solo si se pulsa -->
+            <input type="number" id="factura-propina-val" value="0" placeholder="Monto de la propina en COP" style="display:none; margin-top:0.5rem;" oninput="calcularTotalesFactura()">
+            <div id="propina-advertencia" style="color:var(--color-error); font-size:0.85rem; display:none; margin-top:0.3rem;"></div>
+          </div>
+
+          <!-- Datos adicionales opcionales -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1rem;">
+            <div class="campo-form-barbero">
+              <label>Referencia (para pagos electrónicos)</label>
+              <input type="text" id="factura-referencia" placeholder="Ej: Cod. Referencia de Nequi">
+            </div>
+            <div class="campo-form-barbero">
+              <label>Nombre del cliente (opcional)</label>
+              <input type="text" id="factura-cliente" placeholder="Ej: Jesus Andres">
+            </div>
+          </div>
+
+          <!-- Contenedor del Total -->
+          <div class="contenedor-total-factura">
+            <div class="fila-total"><span>Subtotal Servicios:</span><strong id="factura-subtotal-txt">0 COP</strong></div>
+            <div class="fila-total"><span>Propina:</span><strong id="factura-propina-txt">0 COP</strong></div>
+            <div class="fila-total grande"><span>Total a Cobrar:</span><strong id="factura-total-txt">0 COP</strong></div>
+          </div>
+
+          <div id="factura-error" style="color:var(--color-error); font-size:0.85rem; display:none;"></div>
+          <div id="factura-exito" style="color:var(--color-exito); font-size:0.85rem; display:none;"></div>
+          <button type="submit" id="btn-registrar-factura" class="btn btn-exito" style="width:100%; margin-top:1rem;">✔ Registrar y Facturar Trabajo</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- SUBSECCIÓN: MI HISTORIAL INDIVIDUAL -->
+    <div id="sec-barbero-historial" class="subseccion-barbero">
+      <div class="tarjeta-panel-barbero-full">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; border-bottom:1px solid var(--color-borde); padding-bottom:0.8rem;">
+          <h2 style="border:none; margin:0; padding:0;">📜 Mi Historial de Servicios Realizados</h2>
+          
+          <!-- Convertidor de monedas interactivo -->
+          <div class="selector-moneda-container">
+            <span class="label-moneda">VER EN:</span>
+            <button class="btn-moneda activo" onclick="cambiarMonedaVisualizacion('COP', this)">COP</button>
+            <button class="btn-moneda" onclick="cambiarMonedaVisualizacion('VES', this)">VES</button>
+            <button class="btn-moneda" onclick="cambiarMonedaVisualizacion('USD', this)">USD</button>
+          </div>
+        </div>
+
+        <p style="font-size:0.9rem; color:var(--color-texto-secundario); margin-bottom:1.5rem;">Aquí visualizas únicamente los servicios que tú has registrado hoy e históricamente.</p>
+        
+        <div class="contenedor-tabla">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha/Hora</th>
+                <th>Servicio</th>
+                <th>Cliente</th>
+                <th>Método de Pago</th>
+                <th>Referencia</th>
+                <th>Monto Servicio</th>
+                <th>Propina</th>
+                <th>Total Cobrado</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-historico-barbero">
+              <!-- Renderizado por JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="contenedor-total-factura" style="margin-top:1.5rem; max-width:400px; margin-left:auto;">
+          <div class="fila-total"><span>Total Servicios:</span><strong id="barbero-sum-servicios">0 COP</strong></div>
+          <div class="fila-total"><span>Total Propinas:</span><strong id="barbero-sum-propinas">0 COP</strong></div>
+          <div class="fila-total grande"><span>Total General:</span><strong id="barbero-sum-total">0 COP</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBSECCIÓN: CITAS PENDIENTES DEL BARBERO -->
+    <div id="sec-barbero-citas" class="subseccion-barbero">
+      <div class="tarjeta-panel-barbero-full">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem; border-bottom:1px solid var(--color-borde); padding-bottom:0.8rem;">
+          <h2 style="border:none; margin:0; padding:0;">🔔 Mis Citas Pendientes</h2>
+          <button class="btn btn-secundario" style="font-size:0.85rem; padding:0.4rem 0.9rem;" onclick="cargarCitasPendientes()">↻ Actualizar</button>
+        </div>
+        <p style="font-size:0.9rem; color:var(--color-texto-secundario); margin-bottom:1.5rem;">Aquí aparecen las citas que los clientes han reservado contigo. Márcalas como atendidas una vez que el cliente llegue.</p>
+        <div id="lista-citas-pendientes" style="display:flex; flex-direction:column; gap:1rem;">
+          <p style="color:var(--color-texto-secundario); font-size:0.9rem;">Cargando citas...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBSECCIÓN: AJUSTES DE PERFIL Y TEMA -->
+    <div id="sec-barbero-ajustes" class="subseccion-barbero">
+      <div class="tarjeta-panel-barbero-full">
+        <h2>⚙️ Ajustes de Mi Perfil y Personalización</h2>
+        
+        <!-- Formulario Perfil -->
+        <form id="form-barbero-perfil" style="margin-bottom:2.5rem; border-bottom:1px solid var(--color-borde); padding-bottom:2rem;">
+          <h3 style="font-size:1.1rem; margin-bottom:1rem; color:var(--color-acento);">Datos Personales</h3>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem;">
+            <div class="campo-form">
+              <label>Nombre en el Sistema</label>
+              <input type="text" id="perf-barbero-nombre" required>
+            </div>
+            <div class="campo-form">
+              <label>Usuario de Acceso</label>
+              <input type="text" id="perf-barbero-usuario" required disabled title="El ID de usuario no puede ser modificado después del registro.">
+            </div>
+            <div class="campo-form">
+              <label>Nueva Contraseña (Dejar en blanco para mantener actual)</label>
+              <div class="campo-contrasena">
+                <input type="password" id="perf-barbero-contrasena" placeholder="Min. 6 caracteres">
+                <button type="button" class="btn-ojo" tabindex="-1" onclick="toggleOjo('perf-barbero-contrasena', this)" title="Mostrar/Ocultar">👁</button>
+              </div>
+            </div>
+          </div>
+          <div id="perf-barbero-msg" style="font-size:0.9rem; margin-top:0.8rem; display:none;"></div>
+          <button type="submit" class="btn" style="margin-top:1rem; width:fit-content;">Guardar Datos de Perfil</button>
+        </form>
+
+        <!-- Formulario Temas -->
+        <form id="form-barbero-tema">
+          <h3 style="font-size:1.1rem; margin-bottom:0.5rem; color:var(--color-acento);">Tema e Interfaz Visual</h3>
+          <p style="font-size:0.9rem; color:var(--color-texto-secundario); margin-bottom:1.5rem;">Elige una combinación de colores rápida o personalízala a tu antojo.</p>
+          
+          <!-- Packs rápidos de colores -->
+          <div class="campo-form" style="margin-bottom:1.5rem;">
+            <label style="font-weight:700; margin-bottom:0.8rem;">Packs de Colores Listos</label>
+            <div class="packs-colores-container">
+              
+              <div class="btn-pack-color" onclick="aplicarPackTema('slate', this)">
+                <div class="circulos-colores">
+                  <div class="circulo-color" style="background:#0f172a"></div>
+                  <div class="circulo-color" style="background:#f8fafc"></div>
+                  <div class="circulo-color" style="background:#0284c7"></div>
+                </div>
+                <div class="titulo-pack">Slate Oscuro</div>
+              </div>
+
+              <div class="btn-pack-color" onclick="aplicarPackTema('madera', this)">
+                <div class="circulos-colores">
+                  <div class="circulo-color" style="background:#1c1917"></div>
+                  <div class="circulo-color" style="background:#fafaf9"></div>
+                  <div class="circulo-color" style="background:#d97706"></div>
+                </div>
+                <div class="titulo-pack">Madera y Oro</div>
+              </div>
+
+              <div class="btn-pack-color" onclick="aplicarPackTema('cyber', this)">
+                <div class="circulos-colores">
+                  <div class="circulo-color" style="background:#0c0a0f"></div>
+                  <div class="circulo-color" style="background:#f8f0ff"></div>
+                  <div class="circulo-color" style="background:#d946ef"></div>
+                </div>
+                <div class="titulo-pack">Cyberpunk</div>
+              </div>
+
+              <div class="btn-pack-color" onclick="aplicarPackTema('claro', this)">
+                <div class="circulos-colores">
+                  <div class="circulo-color" style="background:#f8fafc"></div>
+                  <div class="circulo-color" style="background:#0f172a"></div>
+                  <div class="circulo-color" style="background:#0284c7"></div>
+                </div>
+                <div class="titulo-pack">Claro Minimal</div>
+              </div>
+
+              <div class="btn-pack-color" onclick="aplicarPackTema('esmeralda', this)">
+                <div class="circulos-colores">
+                  <div class="circulo-color" style="background:#061d15"></div>
+                  <div class="circulo-color" style="background:#f0fdf4"></div>
+                  <div class="circulo-color" style="background:#10b981"></div>
+                </div>
+                <div class="titulo-pack">Esmeralda Premium</div>
+              </div>
+
+              <div class="btn-pack-color" onclick="aplicarPackTema('oceano', this)">
+                <div class="circulos-colores">
+                  <div class="circulo-color" style="background:#051d30"></div>
+                  <div class="circulo-color" style="background:#f0f9ff"></div>
+                  <div class="circulo-color" style="background:#06b6d4"></div>
+                </div>
+                <div class="titulo-pack">Océano Profundo</div>
+              </div>
+
+              <div class="btn-pack-color" onclick="aplicarPackTema('borgonia', this)">
+                <div class="circulos-colores">
+                  <div class="circulo-color" style="background:#1e0811"></div>
+                  <div class="circulo-color" style="background:#fff1f2"></div>
+                  <div class="circulo-color" style="background:#f43f5e"></div>
+                </div>
+                <div class="titulo-pack">Borgoña Clásico</div>
+              </div>
+
+              <div class="btn-pack-color" onclick="aplicarPackTema('chocolate', this)">
+                <div class="circulos-colores">
+                  <div class="circulo-color" style="background:#1c130e"></div>
+                  <div class="circulo-color" style="background:#faf7f5"></div>
+                  <div class="circulo-color" style="background:#2dd4bf"></div>
+                </div>
+                <div class="titulo-pack">Chocolate y Menta</div>
+              </div>
+
+              <div class="btn-pack-color" onclick="aplicarPackTema('carbon', this)">
+                <div class="circulos-colores">
+                  <div class="circulo-color" style="background:#171717"></div>
+                  <div class="circulo-color" style="background:#fafafa"></div>
+                  <div class="circulo-color" style="background:#f97316"></div>
+                </div>
+                <div class="titulo-pack">Carbón y Naranja</div>
+              </div>
+
+              <div class="btn-pack-color" onclick="aplicarPackTema('amatista', this)">
+                <div class="circulos-colores">
+                  <div class="circulo-color" style="background:#130a1e"></div>
+                  <div class="circulo-color" style="background:#faf5ff"></div>
+                  <div class="circulo-color" style="background:#a855f7"></div>
+                </div>
+                <div class="titulo-pack">Amatista Mística</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Paleta de colores individuales -->
+          <div class="campo-form">
+            <label style="font-weight:700; margin-bottom:0.8rem;">Ajuste de Colores Fino</label>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+              <div class="campo-form">
+                <label>Fondo de pantalla</label>
+                <input type="color" id="barbero-color-fondo" value="#0f172a" onchange="actualizarTemaEnTiempoReal()">
+              </div>
+              <div class="campo-form">
+                <label>Texto principal</label>
+                <input type="color" id="barbero-color-texto" value="#f8fafc" onchange="actualizarTemaEnTiempoReal()">
+              </div>
+              <div class="campo-form">
+                <label>Color de Acento</label>
+                <input type="color" id="barbero-color-acento" value="#0284c7" onchange="actualizarTemaEnTiempoReal()">
+              </div>
+              <div class="campo-form">
+                <label>Color de Tarjetas</label>
+                <input type="color" id="barbero-color-tarjeta" value="#1e293b" onchange="actualizarTemaEnTiempoReal()">
+              </div>
+            </div>
+          </div>
+
+          <div id="barbero-tema-msg" style="font-size:0.9rem; margin-top:0.8rem; display:none;"></div>
+          <button type="submit" class="btn btn-llamativo" style="width:fit-content;">💾 Guardar Mi Tema Personalizado</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =====================================================
+     VISTA 4: PANEL ADMINISTRADOR
+     ===================================================== -->
+<div id="vista-admin" class="vista" style="flex-direction:column; min-height:100vh;">
+  <!-- Cabecera -->
+  <header class="cabecera-erp">
+    <div style="font-weight:800; font-size:1.1rem; color:var(--color-acento);">💈 ERP Barbería</div>
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+      <span style="font-size:0.9rem; color:var(--color-texto-secundario);">Admin: <strong id="admin-nombre" style="color:var(--color-acento);"></strong></span>
+      <!-- Botón de tuerca para Ajustes de Admin -->
+      <button class="btn-nav-calendario" style="padding:0.4rem; border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center;" onclick="cambiarSeccion('sec-admin-ajustes')" title="Ajustes y Personalización de Admin">⚙️</button>
+      <button class="btn btn-peligro" style="padding:0.4rem 0.8rem; font-size:0.85rem;" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </header>
+
+  <!-- Layout con sidebar -->
+  <div class="layout-erp" style="flex:1;">
+    <!-- Sidebar -->
+    <aside class="sidebar-erp">
+      <ul class="menu-erp">
+        <li class="activo" data-seccion="sec-dashboard"><a onclick="cambiarSeccion('sec-dashboard')">📊 Dashboard</a></li>
+        <li data-seccion="sec-barberos"><a onclick="cambiarSeccion('sec-barberos')">👤 Usuarios</a></li>
+        <li data-seccion="sec-servicios"><a onclick="cambiarSeccion('sec-servicios')">💇 Catálogo</a></li>
+        <li data-seccion="sec-metodos"><a onclick="cambiarSeccion('sec-metodos')">💳 Métodos de Pago</a></li>
+        <li data-seccion="sec-auditoria"><a onclick="cambiarSeccion('sec-auditoria')">📜 Auditoría</a></li>
+      </ul>
+    </aside>
+
+    <!-- Cuerpo principal -->
+    <div class="cuerpo-erp">
+
+      <!-- SECCIÓN: DASHBOARD -->
+      <div id="sec-dashboard" class="seccion-erp activa">
+        <h2>Dashboard Financiero</h2>
+        <div class="grid-metricas">
+          <div class="tarjeta-metrica"><h4>Histórico Total</h4><div id="met-historico" class="valor">—</div></div>
+          <div class="tarjeta-metrica"><h4>Facturación Hoy</h4><div id="met-hoy" class="valor">—</div></div>
+          <div class="tarjeta-metrica"><h4>Facturación Este Mes</h4><div id="met-mes" class="valor">—</div></div>
+          <div class="tarjeta-metrica" style="border:1px solid rgba(2, 132, 199, 0.3);">
+            <h4>Tasas de Cambio Oficiales (API)</h4>
+            <div style="display:flex; flex-direction:column; gap:0.4rem; font-size:1.05rem; margin-top:0.5rem;">
+              <div>💵 <strong>1 USD = </strong> <span id="dash-usd-cop" style="font-weight:800; color:var(--color-acento);">—</span> COP</div>
+              <div>🇻🇪 <strong>1 USD = </strong> <span id="dash-usd-ves" style="font-weight:800; color:var(--color-acento);">—</span> VES (BCV)</div>
+            </div>
+            <div style="font-size:0.75rem; color:var(--color-texto-secundario); margin-top:0.4rem;">Actualizado automáticamente</div>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; flex-wrap:wrap;">
+          <div class="contenedor-tabla" style="padding:1.5rem; min-width:0;">
+            <h3 style="margin-top:0; margin-bottom:1rem; font-size:1rem;">Ventas por Barbero</h3>
+            <div id="grafica-barberos"></div>
+          </div>
+          <div class="contenedor-tabla" style="padding:1.5rem; min-width:0;">
+            <h3 style="margin-top:0; margin-bottom:1rem; font-size:1rem;">Por Método de Pago</h3>
+            <div id="grafica-metodos"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sec-barberos" class="seccion-erp">
+        <h2 id="titulo-form-barbero">Gestión de Usuarios</h2>
+        <form id="form-nuevo-barbero" class="formulario-crear">
+          <input type="hidden" id="edit-barbero-id">
+          <div class="campo-form"><label>Nombre Completo</label><input type="text" id="nb-nombre" placeholder="Ej: Roberto Díaz" required></div>
+          <div class="campo-form"><label>Usuario de Acceso</label><input type="text" id="nb-usuario" placeholder="Ej: roberto" required></div>
+          <div class="campo-form">
+            <label>Rol del Usuario</label>
+            <select id="nb-rol" onchange="verificarRolOtro(this.value)" required>
+              <option value="BARBERO">Barbero</option>
+              <option value="CAJERO">Cajero</option>
+              <option value="ADMINISTRADOR">Administrador</option>
+              <option value="OTRO">Otro rol (especificar...)</option>
+            </select>
+          </div>
+          <div class="campo-form" id="contenedor-nb-rol-otro" style="display:none;">
+            <label>Especificar Rol Personalizado</label>
+            <input type="text" id="nb-rol-otro" placeholder="Ej: CONTADORA, SOCIO, LIMPIEZA" style="text-transform:uppercase;">
+          </div>
+          <div class="campo-form" id="contenedor-nb-contrasena">
+            <label id="label-nb-contrasena">Contraseña Inicial</label>
+            <div class="campo-contrasena">
+              <input type="password" id="nb-contrasena" placeholder="Min. 6 caracteres" required>
+              <button type="button" class="btn-ojo" tabindex="-1" onclick="toggleOjo('nb-contrasena', this)" title="Mostrar/Ocultar">👁</button>
+            </div>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <button type="submit" id="btn-guardar-barbero" class="btn" style="height:42px; flex:1;">+ Crear Usuario</button>
+            <button type="button" id="btn-cancelar-barbero" class="btn btn-secundario" style="height:42px; display:none;" onclick="cancelarEdicionBarbero()">Cancelar</button>
+          </div>
+        </form>
+        <div class="contenedor-tabla">
+          <table><thead><tr><th>ID</th><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th>Activar / Desactivar</th><th>Acciones</th></tr></thead>
+          <tbody id="tbody-barberos"></tbody></table>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: SERVICIOS / CATÁLOGO -->
+      <div id="sec-servicios" class="seccion-erp">
+        <h2 id="titulo-form-servicio">Catálogo de Cortes y Combos (Servicios)</h2>
+        <form id="form-nuevo-servicio" class="formulario-crear">
+          <input type="hidden" id="edit-servicio-id">
+          <div class="campo-form"><label>Nombre del Servicio</label><input type="text" id="ns-nombre" placeholder="Ej: Combo Stylo" required></div>
+          <div class="campo-form"><label>Descripción</label><input type="text" id="ns-descripcion" placeholder="Breve descripción" required></div>
+          <div class="campo-form"><label>Precio (COP)</label><input type="number" step="0.01" id="ns-precio" placeholder="Ej: 20000" required></div>
+          <div style="display:flex; gap:0.5rem;">
+            <button type="submit" id="btn-guardar-servicio" class="btn" style="height:42px; flex:1;">+ Agregar Servicio</button>
+            <button type="button" id="btn-cancelar-servicio" class="btn btn-secundario" style="height:42px; display:none;" onclick="cancelarEdicionServicio()">Cancelar</button>
+          </div>
+        </form>
+        <div class="contenedor-tabla">
+          <table><thead><tr><th>ID</th><th>Nombre</th><th>Descripción</th><th>Precio (COP)</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="tbody-servicios"></tbody></table>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: MÉTODOS DE PAGO -->
+      <div id="sec-metodos" class="seccion-erp">
+        <h2 id="titulo-form-metodo">Métodos de Pago</h2>
+        <form id="form-nuevo-metodo" class="formulario-crear" style="grid-template-columns:2fr 1fr;">
+          <input type="hidden" id="edit-metodo-id">
+          <div class="campo-form"><label>Nombre del Método</label><input type="text" id="nm-nombre" placeholder="Ej: Pago Móvil" required></div>
+          <div style="display:flex; gap:0.5rem;">
+            <button type="submit" id="btn-guardar-metodo" class="btn" style="height:42px; flex:1;">+ Agregar Método</button>
+            <button type="button" id="btn-cancelar-metodo" class="btn btn-secundario" style="height:42px; display:none;" onclick="cancelarEdicionMetodo()">Cancelar</button>
+          </div>
+        </form>
+        <div class="contenedor-tabla">
+          <table><thead><tr><th>ID</th><th>Método</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="tbody-metodos"></tbody></table>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: AUDITORÍA -->
+      <div id="sec-auditoria" class="seccion-erp">
+        <div class="cabecera-auditoria" style="border-bottom:1px solid var(--color-borde); padding-bottom:0.8rem;">
+          <h2 style="margin:0;">Historial de Auditoría</h2>
+          
+          <div style="display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap;">
+            <!-- Convertidor de monedas interactivo -->
+            <div class="selector-moneda-container">
+              <span class="label-moneda">VER EN:</span>
+              <button class="btn-moneda activo" onclick="cambiarMonedaVisualizacion('COP', this)">COP</button>
+              <button class="btn-moneda" onclick="cambiarMonedaVisualizacion('VES', this)">VES</button>
+              <button class="btn-moneda" onclick="cambiarMonedaVisualizacion('USD', this)">USD</button>
+            </div>
+
+            <div class="botones-exportar">
+              <button class="btn btn-exito" style="padding:0.5rem 1rem; font-size:0.85rem;" onclick="exportarAuditoria('excel')">📊 Exportar Excel</button>
+              <button class="btn" style="padding:0.5rem 1rem; font-size:0.85rem; background:#dc2626;" onclick="exportarAuditoria('pdf')">📄 Exportar PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filtros-auditoria">
+          <div class="campo-form"><label>Barbero</label>
+            <select id="filtro-barbero-id"><option value="">Todos</option></select>
+          </div>
+          <div class="campo-form"><label>Día específico</label><input type="date" id="filtro-dia"></div>
+          <div class="campo-form"><label>Mes</label>
+            <select id="filtro-mes">
+              <option value="">Todos</option>
+              <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+              <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+              <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+              <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+            </select>
+          </div>
+          <div class="campo-form"><label>Año</label><input type="number" id="filtro-anio" value="2026" style="width:100px;"></div>
+          <button class="btn" style="height:42px; padding:0 1rem;" onclick="cargarAuditoria()">Filtrar</button>
+          <button class="btn btn-secundario" style="height:42px; padding:0 1rem;" onclick="limpiarFiltros()">Limpiar</button>
+        </div>
+
+        <!-- Tabla de ventas -->
+        <h3 style="font-size:1rem; margin-bottom:0.5rem;">Ventas Facturadas</h3>
+        <div class="contenedor-tabla">
+          <table>
+            <thead><tr><th>Fecha/Hora</th><th>Barbero</th><th>Servicios</th><th>Cliente</th><th>Método</th><th>Referencia</th><th>Monto</th><th>Propina</th></tr></thead>
+            <tbody id="tbody-ventas"></tbody>
+          </table>
+        </div>
+
+        <!-- Tabla de accesos -->
+        <h3 style="font-size:1rem; margin-bottom:0.5rem; margin-top:1rem;">Logs de Accesos y Acciones</h3>
+        <div class="contenedor-tabla">
+          <table>
+            <thead><tr><th>Fecha/Hora</th><th>Usuario</th><th>Acción</th><th>Detalles</th></tr></thead>
+            <tbody id="tbody-accesos"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECCIÓN: AJUSTES GENERALES DEL ADMIN (TUERCA) -->
+      <div id="sec-admin-ajustes" class="seccion-erp">
+        <h2>⚙️ Ajustes del Sistema y Tema Administrativo</h2>
+
+        <!-- Perfil Admin -->
+        <div class="contenedor-tabla" style="padding:1.5rem; margin-bottom:1.5rem;">
+          <h3 style="margin-top:0; margin-bottom:1rem; font-size:1.1rem; color:var(--color-acento);">Seguridad de Mi Cuenta</h3>
+          <form id="form-admin-perfil" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; align-items:flex-end;">
+            <div class="campo-form">
+              <label>Nombre de Administrador</label>
+              <input type="text" id="perf-admin-nombre" required>
+            </div>
+            <div class="campo-form">
+              <label>Usuario de Acceso</label>
+              <input type="text" id="perf-admin-usuario" required disabled title="El ID de usuario no puede ser modificado después del registro.">
+            </div>
+            <div class="campo-form">
+              <label>Nueva Contraseña (Dejar en blanco para mantener la misma)</label>
+              <div class="campo-contrasena">
+                <input type="password" id="perf-admin-contrasena" placeholder="Min. 6 caracteres">
+                <button type="button" class="btn-ojo" tabindex="-1" onclick="toggleOjo('perf-admin-contrasena', this)" title="Mostrar/Ocultar">👁</button>
+              </div>
+            </div>
+            <button type="submit" class="btn" style="height:44px;">Actualizar Mi Perfil</button>
+          </form>
+          <div id="perf-admin-msg" style="font-size:0.9rem; margin-top:0.8rem; display:none;"></div>
+        </div>
+
+        <!-- Tema Visual Admin -->
+        <div class="contenedor-tabla" style="padding:1.5rem;">
+          <h3 style="margin-top:0; margin-bottom:0.5rem; font-size:1.1rem; color:var(--color-acento);">Tema Visual de la Interfaz</h3>
+          <p style="font-size:0.9rem; color:var(--color-texto-secundario); margin-bottom:1.5rem;">Personaliza los colores del ERP para esta sesión administrativa.</p>
+          
+          <form id="form-admin-tema">
+            <div class="campo-form" style="margin-bottom:1.2rem;">
+              <label style="font-weight:700; margin-bottom:0.8rem;">Combinación Rápida de Colores</label>
+              <div class="packs-colores-container">
+                <div class="btn-pack-color" onclick="aplicarPackTema('slate', this)">
+                  <div class="circulos-colores">
+                    <div class="circulo-color" style="background:#0f172a"></div>
+                    <div class="circulo-color" style="background:#f8fafc"></div>
+                    <div class="circulo-color" style="background:#0284c7"></div>
+                  </div>
+                  <div class="titulo-pack">Slate Oscuro</div>
+                </div>
+                <div class="btn-pack-color" onclick="aplicarPackTema('madera', this)">
+                  <div class="circulos-colores">
+                    <div class="circulo-color" style="background:#1c1917"></div>
+                    <div class="circulo-color" style="background:#fafaf9"></div>
+                    <div class="circulo-color" style="background:#d97706"></div>
+                  </div>
+                  <div class="titulo-pack">Madera y Oro</div>
+                </div>
+                <div class="btn-pack-color" onclick="aplicarPackTema('cyber', this)">
+                  <div class="circulos-colores">
+                    <div class="circulo-color" style="background:#0c0a0f"></div>
+                    <div class="circulo-color" style="background:#f8f0ff"></div>
+                    <div class="circulo-color" style="background:#d946ef"></div>
+                  </div>
+                  <div class="titulo-pack">Cyberpunk</div>
+                </div>
+                <div class="btn-pack-color" onclick="aplicarPackTema('claro', this)">
+                  <div class="circulos-colores">
+                    <div class="circulo-color" style="background:#f8fafc"></div>
+                    <div class="circulo-color" style="background:#0f172a"></div>
+                    <div class="circulo-color" style="background:#0284c7"></div>
+                  </div>
+                  <div class="titulo-pack">Claro Minimal</div>
+                </div>
+                <div class="btn-pack-color" onclick="aplicarPackTema('esmeralda', this)">
+                  <div class="circulos-colores">
+                    <div class="circulo-color" style="background:#061d15"></div>
+                    <div class="circulo-color" style="background:#f0fdf4"></div>
+                    <div class="circulo-color" style="background:#10b981"></div>
+                  </div>
+                  <div class="titulo-pack">Esmeralda Premium</div>
+                </div>
+                <div class="btn-pack-color" onclick="aplicarPackTema('oceano', this)">
+                  <div class="circulos-colores">
+                    <div class="circulo-color" style="background:#051d30"></div>
+                    <div class="circulo-color" style="background:#f0f9ff"></div>
+                    <div class="circulo-color" style="background:#06b6d4"></div>
+                  </div>
+                  <div class="titulo-pack">Océano Profundo</div>
+                </div>
+                <div class="btn-pack-color" onclick="aplicarPackTema('borgonia', this)">
+                  <div class="circulos-colores">
+                    <div class="circulo-color" style="background:#1e0811"></div>
+                    <div class="circulo-color" style="background:#fff1f2"></div>
+                    <div class="circulo-color" style="background:#f43f5e"></div>
+                  </div>
+                  <div class="titulo-pack">Borgoña Clásico</div>
+                </div>
+                <div class="btn-pack-color" onclick="aplicarPackTema('chocolate', this)">
+                  <div class="circulos-colores">
+                    <div class="circulo-color" style="background:#1c130e"></div>
+                    <div class="circulo-color" style="background:#faf7f5"></div>
+                    <div class="circulo-color" style="background:#2dd4bf"></div>
+                  </div>
+                  <div class="titulo-pack">Chocolate y Menta</div>
+                </div>
+                <div class="btn-pack-color" onclick="aplicarPackTema('carbon', this)">
+                  <div class="circulos-colores">
+                    <div class="circulo-color" style="background:#171717"></div>
+                    <div class="circulo-color" style="background:#fafafa"></div>
+                    <div class="circulo-color" style="background:#f97316"></div>
+                  </div>
+                  <div class="titulo-pack">Carbón y Naranja</div>
+                </div>
+                <div class="btn-pack-color" onclick="aplicarPackTema('amatista', this)">
+                  <div class="circulos-colores">
+                    <div class="circulo-color" style="background:#130a1e"></div>
+                    <div class="circulo-color" style="background:#faf5ff"></div>
+                    <div class="circulo-color" style="background:#a855f7"></div>
+                  </div>
+                  <div class="titulo-pack">Amatista Mística</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:1rem; margin-bottom:1.5rem;">
+              <div class="campo-form">
+                <label>Fondo de pantalla</label>
+                <input type="color" id="admin-color-fondo" value="#0f172a" onchange="actualizarTemaAdminEnTiempoReal()">
+              </div>
+              <div class="campo-form">
+                <label>Texto principal</label>
+                <input type="color" id="admin-color-texto" value="#f8fafc" onchange="actualizarTemaAdminEnTiempoReal()">
+              </div>
+              <div class="campo-form">
+                <label>Color de Acento</label>
+                <input type="color" id="admin-color-acento" value="#0284c7" onchange="actualizarTemaAdminEnTiempoReal()">
+              </div>
+              <div class="campo-form">
+                <label>Color de Tarjetas</label>
+                <input type="color" id="admin-color-tarjeta" value="#1e293b" onchange="actualizarTemaAdminEnTiempoReal()">
+              </div>
+            </div>
+            
+            <div id="admin-tema-msg" style="font-size:0.9rem; margin-top:0.8rem; display:none;"></div>
+            <button type="submit" class="btn btn-llamativo" style="width:fit-content;">💾 Guardar Mi Tema Personalizado</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     LÓGICA JAVASCRIPT UNIFICADA
+     ===================================================== -->
+<script>
+// =============================================================
+// ESTADO GLOBAL
+// =============================================================
+const Estado = {
+  token: null,
+  usuario: null,
+  tasas: { usd_cop: 4000.0, usd_ves: 36.5 },
+  monedaVisualizacion: 'COP', // 'COP', 'VES', 'USD'
+  
+  // Facturación barbero
+  serviciosDisponibles: [],
+  metodosPagoDisponibles: [],
+  serviciosIdsSeleccionados: [],
+  metodoPagoSeleccionadoId: null,
+  propinaSeleccionadaPorcentaje: 0, // 0, 0.1, 0.15, 0.20, -1 para personalizado
+  
+  // Reservas clientes
+  mesCalendario: new Date().getMonth(),
+  anioCalendario: new Date().getFullYear(),
+  fechaSeleccionada: null,
+  barberoSeleccionadoCita: null,
+  horaSeleccionadaCita: null
+};
+
+const NOMBRES_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const HORAS_LABORALES = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
+
+const TEMAS_PRESET = {
+  slate: { colorFondo: '#0f172a', colorTexto: '#f8fafc', colorAcento: '#0284c7', colorTarjeta: '#1e293b' },
+  madera: { colorFondo: '#1c1917', colorTexto: '#fafaf9', colorAcento: '#d97706', colorTarjeta: '#292524' },
+  cyber: { colorFondo: '#0c0a0f', colorTexto: '#f8f0ff', colorAcento: '#d946ef', colorTarjeta: '#171221' },
+  claro: { colorFondo: '#f8fafc', colorTexto: '#0f172a', colorAcento: '#0284c7', colorTarjeta: '#ffffff' },
+  esmeralda: { colorFondo: '#061d15', colorTexto: '#f0fdf4', colorAcento: '#10b981', colorTarjeta: '#0b2e23' },
+  oceano: { colorFondo: '#051d30', colorTexto: '#f0f9ff', colorAcento: '#06b6d4', colorTarjeta: '#0a2c47' },
+  borgonia: { colorFondo: '#1e0811', colorTexto: '#fff1f2', colorAcento: '#f43f5e', colorTarjeta: '#2d0f1b' },
+  chocolate: { colorFondo: '#1c130e', colorTexto: '#faf7f5', colorAcento: '#2dd4bf', colorTarjeta: '#2d1f18' },
+  carbon: { colorFondo: '#171717', colorTexto: '#fafafa', colorAcento: '#f97316', colorTarjeta: '#262626' },
+  amatista: { colorFondo: '#130a1e', colorTexto: '#faf5ff', colorAcento: '#a855f7', colorTarjeta: '#201230' }
+};
+
+// =============================================================
+// UTILIDADES
+// =============================================================
+function mostrarVista(id) {
+  document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
+  const vista = document.getElementById(id);
+  if (vista) vista.classList.add('activa');
+}
+
+function volverLogin() {
+  mostrarVista('vista-login');
+}
+
+function cerrarSesion() {
+  Estado.token = null;
+  Estado.usuario = null;
+  localStorage.removeItem('erp_token');
+  localStorage.removeItem('erp_usuario');
+  mostrarVista('vista-login');
+}
+
+function aplicarTema(tema) {
+  if (!tema) return;
+  const root = document.documentElement;
+  if (tema.colorFondo)   root.style.setProperty('--color-fondo',   tema.colorFondo);
+  if (tema.colorTexto)   root.style.setProperty('--color-texto',   tema.colorTexto);
+  if (tema.colorAcento)  root.style.setProperty('--color-acento',  tema.colorAcento);
+  if (tema.colorTarjeta) root.style.setProperty('--color-tarjeta', tema.colorTarjeta);
+
+  // Sincronizar inputs de Barbero
+  const bFondo = document.getElementById('barbero-color-fondo');
+  if (bFondo) bFondo.value = tema.colorFondo || '#0f172a';
+  const bTexto = document.getElementById('barbero-color-texto');
+  if (bTexto) bTexto.value = tema.colorTexto || '#f8fafc';
+  const bAcento = document.getElementById('barbero-color-acento');
+  if (bAcento) bAcento.value = tema.colorAcento || '#0284c7';
+  const bTarjeta = document.getElementById('barbero-color-tarjeta');
+  if (bTarjeta) bTarjeta.value = tema.colorTarjeta || '#1e293b';
+
+  // Sincronizar inputs de Admin
+  const aFondo = document.getElementById('admin-color-fondo');
+  if (aFondo) aFondo.value = tema.colorFondo || '#0f172a';
+  const aTexto = document.getElementById('admin-color-texto');
+  if (aTexto) aTexto.value = tema.colorTexto || '#f8fafc';
+  const aAcento = document.getElementById('admin-color-acento');
+  if (aAcento) aAcento.value = tema.colorAcento || '#0284c7';
+  const aTarjeta = document.getElementById('admin-color-tarjeta');
+  if (aTarjeta) aTarjeta.value = tema.colorTarjeta || '#1e293b';
+}
+
+async function api(ruta, opciones = {}) {
+  const cabeceras = { 'Content-Type': 'application/json', ...(opciones.cabeceras || {}) };
+  if (Estado.token) cabeceras['Authorization'] = `Bearer ${Estado.token}`;
+  const resp = await fetch(ruta, { ...opciones, headers: cabeceras });
+  return { ok: resp.ok, status: resp.status, datos: await resp.json() };
+}
+
+// Cargar tasas oficiales del servidor en tiempo real y actualizar widgets
+async function cargarTasasServidor() {
+  try {
+    const { ok, datos } = await api('/api/tasas');
+    if (ok) {
+      Estado.tasas = datos;
+      
+      // Actualizar los elementos visuales del dashboard de admin
+      const dUsdCop = document.getElementById('dash-usd-cop');
+      if (dUsdCop) dUsdCop.textContent = parseFloat(datos.usd_cop).toLocaleString('es-CO');
+      const dUsdVes = document.getElementById('dash-usd-ves');
+      if (dUsdVes) dUsdVes.textContent = parseFloat(datos.usd_ves).toLocaleString('es-VE');
+
+      // Actualizar los elementos visuales de referencia del barbero
+      const rUsdCop = document.getElementById('ref-usd-cop');
+      if (rUsdCop) rUsdCop.textContent = parseFloat(datos.usd_cop).toLocaleString('es-CO');
+      const rUsdVes = document.getElementById('ref-usd-ves');
+      if (rUsdVes) rUsdVes.textContent = parseFloat(datos.usd_ves).toLocaleString('es-VE');
+    }
+  } catch (error) {
+    console.error('Error al cargar tasas oficiales:', error);
+  }
+}
+
+// Formateador dinámico basado en la moneda seleccionada
+function formatearMoneda(valorCOP) {
+  if (Estado.monedaVisualizacion === 'USD') {
+    const valorUSD = valorCOP / Estado.tasas.usd_cop;
+    return `${valorUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD $`;
+  } else if (Estado.monedaVisualizacion === 'VES') {
+    const valorUSD = valorCOP / Estado.tasas.usd_cop;
+    const valorVES = valorUSD * Estado.tasas.usd_ves;
+    return `${valorVES.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} VES`;
+  }
+  // COP por defecto
+  return `${valorCOP.toLocaleString('es-CO')} COP`;
+}
+
+function cambiarMonedaVisualizacion(moneda, el) {
+  Estado.monedaVisualizacion = moneda;
+  document.querySelectorAll('.btn-moneda').forEach(btn => btn.classList.remove('activo'));
+  el.classList.add('activo');
+  
+  // Recargar tablas para que aplique la conversión visual instantánea
+  if (Estado.usuario?.rol === 'ADMINISTRADOR') {
+    cargarAuditoria();
+  } else {
+    cargarHistoricoBarbero();
+  }
+}
+
+// =============================================================
+// LOGIN
+// =============================================================
+document.getElementById('formulario-login').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('login-error');
+  err.style.display = 'none';
+  const usuario = document.getElementById('login-usuario').value.trim();
+  const contrasena = document.getElementById('login-contrasena').value;
+
+  try {
+    const { ok, datos } = await api('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ usuario, contrasena })
+    });
+
+    if (!ok) {
+      err.textContent = datos.error || 'Credenciales incorrectas.';
+      err.style.display = 'block';
+      return;
+    }
+
+    Estado.token = datos.token;
+    Estado.usuario = datos.usuario;
+    localStorage.setItem('erp_token', datos.token);
+    localStorage.setItem('erp_usuario', JSON.stringify(datos.usuario));
+
+    let tema = datos.usuario.preferencias_tema;
+    if (typeof tema === 'string') { try { tema = JSON.parse(tema); } catch {} }
+    if (tema) aplicarTema(tema);
+
+    await cargarTasasServidor();
+
+    if (datos.usuario.rol === 'ADMINISTRADOR') {
+      document.getElementById('admin-nombre').textContent = datos.usuario.nombre;
+      
+      // Sincronizar perfil admin
+      document.getElementById('perf-admin-nombre').value = datos.usuario.nombre;
+      document.getElementById('perf-admin-usuario').value = datos.usuario.usuario;
+      document.getElementById('perf-admin-contrasena').value = '';
+
+      mostrarVista('vista-admin');
+      cambiarSeccion('sec-dashboard');
+    } else {
+      document.getElementById('barbero-nombre').textContent = datos.usuario.nombre;
+      
+      // Sincronizar perfil barbero
+      document.getElementById('perf-barbero-nombre').value = datos.usuario.nombre;
+      document.getElementById('perf-barbero-usuario').value = datos.usuario.usuario;
+      document.getElementById('perf-barbero-contrasena').value = '';
+
+      mostrarVista('vista-barbero');
+      cambiarSeccionBarbero('sec-barbero-facturacion');
+      actualizarBadgeNotificacionesSilencioso();
+    }
+  } catch (error) {
+    err.textContent = 'Error de conexión con el servidor.';
+    err.style.display = 'block';
+  }
+});
+
+// =============================================================
+// AJUSTES DE TEMA EN TIEMPO REAL (VISTA PREVIA RÁPIDA)
+// =============================================================
+function actualizarTemaEnTiempoReal() {
+  const colorFondo = document.getElementById('barbero-color-fondo').value;
+  const colorTexto = document.getElementById('barbero-color-texto').value;
+  const colorAcento = document.getElementById('barbero-color-acento').value;
+  const colorTarjeta = document.getElementById('barbero-color-tarjeta').value;
+  aplicarTema({ colorFondo, colorTexto, colorAcento, colorTarjeta });
+}
+
+function actualizarTemaAdminEnTiempoReal() {
+  const colorFondo = document.getElementById('admin-color-fondo').value;
+  const colorTexto = document.getElementById('admin-color-texto').value;
+  const colorAcento = document.getElementById('admin-color-acento').value;
+  const colorTarjeta = document.getElementById('admin-color-tarjeta').value;
+  aplicarTema({ colorFondo, colorTexto, colorAcento, colorTarjeta });
+}
+
+function aplicarPackTema(packName, el) {
+  document.querySelectorAll('.btn-pack-color').forEach(btn => btn.classList.remove('seleccionado'));
+  el.classList.add('seleccionado');
+
+  const tema = TEMAS_PRESET[packName];
+  if (tema) {
+    aplicarTema(tema);
+  }
+}
+
+// Guardar temas
+document.getElementById('form-barbero-tema').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('barbero-tema-msg');
+  msg.style.display = 'none';
+
+  const tema = {
+    colorFondo: document.getElementById('barbero-color-fondo').value,
+    colorTexto: document.getElementById('barbero-color-texto').value,
+    colorAcento: document.getElementById('barbero-color-acento').value,
+    colorTarjeta: document.getElementById('barbero-color-tarjeta').value
+  };
+
+  try {
+    const { ok, datos } = await api('/api/barbero/tema', {
+      method: 'PUT',
+      body: JSON.stringify(tema)
+    });
+    if (ok) {
+      msg.textContent = '✔ Tema guardado en tu perfil exitosamente.';
+      msg.style.color = 'var(--color-exito)';
+      msg.style.display = 'block';
+    } else {
+      msg.textContent = datos.error || 'Error al guardar tema.';
+      msg.style.color = 'var(--color-error)';
+      msg.style.display = 'block';
+    }
+  } catch {
+    msg.textContent = 'Error al comunicarse con el servidor.';
+    msg.style.color = 'var(--color-error)';
+    msg.style.display = 'block';
+  }
+});
+
+document.getElementById('form-admin-tema').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('admin-tema-msg');
+  msg.style.display = 'none';
+
+  const tema = {
+    colorFondo: document.getElementById('admin-color-fondo').value,
+    colorTexto: document.getElementById('admin-color-texto').value,
+    colorAcento: document.getElementById('admin-color-acento').value,
+    colorTarjeta: document.getElementById('admin-color-tarjeta').value
+  };
+
+  try {
+    const { ok, datos } = await api('/api/barbero/tema', {
+      method: 'PUT',
+      body: JSON.stringify(tema)
+    });
+    if (ok) {
+      msg.textContent = '✔ Tema administrativo guardado y configurado.';
+      msg.style.color = 'var(--color-exito)';
+      msg.style.display = 'block';
+    } else {
+      msg.textContent = datos.error || 'Error al guardar tema.';
+      msg.style.color = 'var(--color-error)';
+      msg.style.display = 'block';
+    }
+  } catch {
+    msg.textContent = 'Error al comunicarse con el servidor.';
+    msg.style.color = 'var(--color-error)';
+    msg.style.display = 'block';
+  }
+});
+
+// Guardar datos de perfil (Barbero y Admin)
+document.getElementById('form-barbero-perfil').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('perf-barbero-msg');
+  msg.style.display = 'none';
+
+  const nombre = document.getElementById('perf-barbero-nombre').value.trim();
+  const usuario = document.getElementById('perf-barbero-usuario').value.trim();
+  const contrasena = document.getElementById('perf-barbero-contrasena').value;
+
+  try {
+    const { ok, datos } = await api('/api/barbero/perfil', {
+      method: 'PUT',
+      body: JSON.stringify({ nombre, usuario, contrasena })
+    });
+
+    if (ok) {
+      msg.textContent = '✔ Datos personales actualizados.';
+      msg.style.color = 'var(--color-exito)';
+      msg.style.display = 'block';
+      document.getElementById('barbero-nombre').textContent = nombre;
+      Estado.usuario.nombre = nombre;
+      Estado.usuario.usuario = usuario;
+      localStorage.setItem('erp_usuario', JSON.stringify(Estado.usuario));
+      document.getElementById('perf-barbero-contrasena').value = '';
+    } else {
+      msg.textContent = datos.error || 'Error al actualizar perfil.';
+      msg.style.color = 'var(--color-error)';
+      msg.style.display = 'block';
+    }
+  } catch {
+    msg.textContent = 'Error de comunicación.';
+    msg.style.color = 'var(--color-error)';
+    msg.style.display = 'block';
+  }
+});
+
+document.getElementById('form-admin-perfil').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = document.getElementById('perf-admin-msg');
+  msg.style.display = 'none';
+
+  const nombre = document.getElementById('perf-admin-nombre').value.trim();
+  const usuario = document.getElementById('perf-admin-usuario').value.trim();
+  const contrasena = document.getElementById('perf-admin-contrasena').value;
+
+  try {
+    const { ok, datos } = await api('/api/barbero/perfil', {
+      method: 'PUT',
+      body: JSON.stringify({ nombre, usuario, contrasena })
+    });
+
+    if (ok) {
+      msg.textContent = '✔ Cuenta de administrador actualizada.';
+      msg.style.color = 'var(--color-exito)';
+      msg.style.display = 'block';
+      document.getElementById('admin-nombre').textContent = nombre;
+      Estado.usuario.nombre = nombre;
+      Estado.usuario.usuario = usuario;
+      localStorage.setItem('erp_usuario', JSON.stringify(Estado.usuario));
+      document.getElementById('perf-admin-contrasena').value = '';
+    } else {
+      msg.textContent = datos.error || 'Error al actualizar el perfil administrativo.';
+      msg.style.color = 'var(--color-error)';
+      msg.style.display = 'block';
+    }
+  } catch {
+    msg.textContent = 'Error de red.';
+    msg.style.color = 'var(--color-error)';
+    msg.style.display = 'block';
+  }
+});
+
+
+// =============================================================
+// PORTAL DE RESERVAS — CALENDARIO
+// =============================================================
+document.getElementById('btn-abrir-reservas').addEventListener('click', () => {
+  mostrarVista('vista-reservas');
+  renderizarCalendario();
+  cargarServiciosCita();
+  cargarBarberosCita();
+});
+
+function renderizarCalendario() {
+  const mes = Estado.mesCalendario;
+  const anio = Estado.anioCalendario;
+  document.getElementById('titulo-calendario').textContent = `${NOMBRES_MESES[mes]} ${anio}`;
+
+  const contenedor = document.getElementById('cuerpo-calendario');
+  contenedor.innerHTML = '';
+
+  DIAS_SEMANA.forEach(dia => {
+    const el = document.createElement('div');
+    el.className = 'calendario-dia-cabecera';
+    el.textContent = dia;
+    contenedor.appendChild(el);
+  });
+
+  const primerDia = new Date(anio, mes, 1).getDay();
+  const totalDias = new Date(anio, mes + 1, 0).getDate();
+  const hoy = new Date();
+
+  for (let i = 0; i < primerDia; i++) {
+    const vacio = document.createElement('div');
+    contenedor.appendChild(vacio);
+  }
+
+  for (let d = 1; d <= totalDias; d++) {
+    const el = document.createElement('div');
+    el.className = 'calendario-dia';
+    el.textContent = d;
+
+    const fechaEste = new Date(anio, mes, d);
+    const esHoyOAntes = fechaEste < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    
+    if (esHoyOAntes) {
+      el.classList.add('inactivo');
+    } else {
+      el.addEventListener('click', (event) => seleccionarDia(d, mes, anio, event.target));
+    }
+    contenedor.appendChild(el);
+  }
+}
+
+function seleccionarDia(dia, mes, anio, el) {
+  document.querySelectorAll('.calendario-dia').forEach(item => item.classList.remove('seleccionado'));
+  el.classList.add('seleccionado');
+
+  const mesStr = String(mes + 1).padStart(2, '0');
+  const diaStr = String(dia).padStart(2, '0');
+  Estado.fechaSeleccionada = `${anio}-${mesStr}-${diaStr}`;
+
+  document.getElementById('fecha-seleccionada-label').textContent = `${dia} de ${NOMBRES_MESES[mes]} de ${anio}`;
+
+  const panel = document.getElementById('panel-seleccion-cita');
+  panel.classList.add('visible');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Resetear
+  Estado.barberoSeleccionadoCita = null;
+  Estado.horaSeleccionadaCita = null;
+  document.getElementById('grid-horas-cita').innerHTML = '<p style="color:var(--color-texto-secundario); font-size:0.9rem;">Elige un barbero primero.</p>';
+  document.querySelectorAll('.tarjeta-barbero-cita').forEach(t => t.classList.remove('seleccionado'));
+}
+
+document.getElementById('btn-mes-anterior').addEventListener('click', () => {
+  if (Estado.mesCalendario === 0) { Estado.mesCalendario = 11; Estado.anioCalendario--; }
+  else Estado.mesCalendario--;
+  renderizarCalendario();
+  document.getElementById('panel-seleccion-cita').classList.remove('visible');
+});
+
+document.getElementById('btn-mes-siguiente').addEventListener('click', () => {
+  if (Estado.mesCalendario === 11) { Estado.mesCalendario = 0; Estado.anioCalendario++; }
+  else Estado.mesCalendario++;
+  renderizarCalendario();
+  document.getElementById('panel-seleccion-cita').classList.remove('visible');
+});
+
+async function cargarBarberosCita() {
+  try {
+    const { datos } = await api('/api/cliente/barberos');
+    const contenedor = document.getElementById('grid-barberos-cita');
+    if (!datos || datos.length === 0) {
+      contenedor.innerHTML = '<p style="color:var(--color-texto-secundario);">No hay barberos.</p>';
+      return;
+    }
+    contenedor.innerHTML = datos.map(b => `
+      <div class="tarjeta-barbero-cita" data-id="${b.id}" onclick="seleccionarBarberoCita(${b.id}, this)">
+        <div class="avatar-mini">💈</div>
+        <div>${b.nombre}</div>
+      </div>
+    `).join('');
+  } catch {
+    document.getElementById('grid-barberos-cita').innerHTML = '<p style="color:var(--color-error);">Error al cargar.</p>';
+  }
+}
+
+function seleccionarBarberoCita(id, el) {
+  document.querySelectorAll('.tarjeta-barbero-cita').forEach(t => t.classList.remove('seleccionado'));
+  el.classList.add('seleccionado');
+  Estado.barberoSeleccionadoCita = id;
+  Estado.horaSeleccionadaCita = null;
+  if (Estado.fechaSeleccionada) cargarHorasDisponiblesCita();
+}
+
+async function cargarHorasDisponiblesCita() {
+  const contenedor = document.getElementById('grid-horas-cita');
+  contenedor.innerHTML = '<p style="color:var(--color-texto-secundario); font-size:0.9rem;">Cargando horarios...</p>';
+  try {
+    const { datos } = await api(`/api/cliente/disponibilidad?barberoId=${Estado.barberoSeleccionadoCita}&fecha=${Estado.fechaSeleccionada}`);
+    contenedor.innerHTML = datos.disponibilidad.map(slot => `
+      <div class="slot-hora ${slot.disponible ? 'disponible' : 'ocupado'}" 
+           data-hora="${slot.hora}" 
+           onclick="${slot.disponible ? `seleccionarHoraCita('${slot.hora}', this)` : ''}">
+        ${slot.hora}
+      </div>
+    `).join('');
+  } catch {
+    contenedor.innerHTML = '<p style="color:var(--color-error);">Error al cargar disponibilidad.</p>';
+  }
+}
+
+function seleccionarHoraCita(hora, el) {
+  document.querySelectorAll('.slot-hora').forEach(s => s.classList.remove('seleccionada'));
+  el.classList.add('seleccionada');
+  Estado.horaSeleccionadaCita = hora;
+}
+
+async function cargarServiciosCita() {
+  try {
+    const { datos } = await api('/api/cliente/catalogo');
+    const sel = document.getElementById('cita-servicio');
+    sel.innerHTML = '<option value="">Seleccionar servicio...</option>' +
+      datos.map(s => `<option value="${s.id}">${s.nombre} — ${s.precio.toLocaleString('es-CO')} COP</option>`).join('');
+  } catch {}
+}
+
+document.getElementById('btn-confirmar-cita').addEventListener('click', async () => {
+  const err = document.getElementById('cita-error');
+  err.style.display = 'none';
+
+  const nombre = document.getElementById('cita-nombre').value.trim();
+  const telefono = document.getElementById('cita-telefono').value.trim();
+  const prefijo = document.getElementById('cita-prefijo')?.value || '+57';
+  const telefonoCompleto = telefono ? `${prefijo} ${telefono}` : '';
+
+  // Validación: el número local debe ser solo dígitos/espacios y tener 7-15 caracteres
+  const regexTelefono = /^[0-9\s]{7,15}$/;
+  if (!regexTelefono.test(telefono)) {
+    err.textContent = 'El teléfono debe contener solo números y tener al menos 7 dígitos. Ej: 412 1234567';
+    err.style.display = 'block';
+    return;
+  }
+  const correo = document.getElementById('cita-correo').value.trim();
+  const servicioId = document.getElementById('cita-servicio').value;
+
+  if (!Estado.fechaSeleccionada) { err.textContent = 'Elige una fecha.'; err.style.display = 'block'; return; }
+  if (!Estado.barberoSeleccionadoCita) { err.textContent = 'Elige un barbero.'; err.style.display = 'block'; return; }
+  if (!Estado.horaSeleccionadaCita) { err.textContent = 'Elige una hora.'; err.style.display = 'block'; return; }
+  if (!nombre || !telefono || !correo || !servicioId) { err.textContent = 'Completa todos los campos.'; err.style.display = 'block'; return; }
+
+  try {
+    const { ok, datos } = await api('/api/cliente/reservar', {
+      method: 'POST',
+      body: JSON.stringify({
+        nombreCliente: nombre,
+        telefonoCliente: telefonoCompleto,
+        correoCliente: correo,
+        fecha: Estado.fechaSeleccionada,
+        hora: Estado.horaSeleccionadaCita,
+        barberoId: Estado.barberoSeleccionadoCita,
+        servicioId: parseInt(servicioId)
+      })
+    });
+
+    if (!ok) { err.textContent = datos.error || 'Error al reservar.'; err.style.display = 'block'; return; }
+
+    document.getElementById('panel-seleccion-cita').classList.remove('visible');
+    const exito = document.getElementById('alerta-cita-exito');
+    exito.style.display = 'block';
+    exito.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('cita-exito-detalle').textContent =
+      `Tu cita #${datos.cita.id} fue registrada exitosamente para el día ${Estado.fechaSeleccionada} a las ${Estado.horaSeleccionadaCita}.`;
+  } catch {
+    err.textContent = 'Error al procesar la cita.';
+    err.style.display = 'block';
+  }
+});
+
+
+// =============================================================
+// NAVEGACIÓN Y COMPORTAMIENTO PANEL BARBERO
+// =============================================================
+function cambiarSeccionBarbero(secId) {
+  document.querySelectorAll('.subseccion-barbero').forEach(s => s.classList.remove('activa'));
+  document.getElementById(secId).classList.add('activa');
+
+  document.querySelectorAll('.btn-menu-barbero').forEach(btn => btn.classList.remove('activo'));
+  if (secId === 'sec-barbero-facturacion') document.getElementById('btn-barbero-facturacion').classList.add('activo');
+  if (secId === 'sec-barbero-historial') {
+    document.getElementById('btn-barbero-historial').classList.add('activo');
+    cargarHistoricoBarbero();
+  }
+  if (secId === 'sec-barbero-citas') {
+    document.getElementById('btn-barbero-citas').classList.add('activo');
+    cargarCitasPendientes();
+  }
+
+  // Cargar datos si entra a Facturación
+  if (secId === 'sec-barbero-facturacion') {
+    cargarElementosFacturacion();
+  }
+
+  // Mantener actualizado el badge en cada navegación
+  actualizarBadgeNotificacionesSilencioso();
+}
+
+// Cargar Catálogo e Interfaces de Botones del Barbero
+async function cargarElementosFacturacion() {
+  try {
+    const [rServ, rMet] = await Promise.all([
+      api('/api/barbero/servicios'),
+      api('/api/barbero/metodos-pago')
+    ]);
+
+    // El backend devuelve arrays directos; rServ.datos los contiene tras pasar por api()
+    const servicios = Array.isArray(rServ.datos) ? rServ.datos : [];
+    const metodos  = Array.isArray(rMet.datos)  ? rMet.datos  : [];
+
+    Estado.serviciosDisponibles     = servicios;
+    Estado.metodosPagoDisponibles   = metodos;
+
+    // Renderizar servicios como BOTONES
+    const gridServicios = document.getElementById('btn-grid-servicios');
+    if (gridServicios) {
+      if (servicios.length === 0) {
+        gridServicios.innerHTML = '<p style="color:var(--color-texto-secundario); font-size:0.9rem;">No hay servicios activos. Configúralos en el panel de administración.</p>';
+      } else {
+        gridServicios.innerHTML = servicios.map(s => `
+          <div class="btn-servicio-factura" id="btn-serv-${s.id}" onclick="toggleSeleccionServicio(${s.id})">
+            <span class="nombre-tag">${s.nombre}</span>
+            <span class="precio-tag">${s.precio.toLocaleString('es-CO')} COP</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Renderizar métodos de pago como BOTONES
+    const gridPagos = document.getElementById('btn-grid-pagos');
+    if (gridPagos) {
+      if (metodos.length === 0) {
+        gridPagos.innerHTML = '<p style="color:var(--color-texto-secundario); font-size:0.9rem;">No hay métodos de pago activos.</p>';
+      } else {
+        gridPagos.innerHTML = metodos.map(m => `
+          <div class="btn-pago-factura" id="btn-pago-${m.id}" onclick="seleccionarMetodoPago(${m.id})">
+            ${m.nombre}
+          </div>
+        `).join('');
+      }
+    }
+
+    // Resetear variables de facturación
+    Estado.serviciosIdsSeleccionados = [];
+    Estado.metodoPagoSeleccionadoId  = null;
+
+    // Guard: solo ejecutar si el botón de propina está disponible en el DOM
+    const btnPropina = document.querySelector('.btn-propina');
+    if (btnPropina) cambiarPropinaRapida(0, btnPropina);
+    calcularTotalesFactura();
+
+  } catch (error) {
+    console.error('Error al inicializar elementos de facturación:', error);
+    const gridServicios = document.getElementById('btn-grid-servicios');
+    if (gridServicios) gridServicios.innerHTML = '<p style="color:var(--color-error); font-size:0.9rem;">⚠ Error al cargar los servicios. Verifica la conexión con el servidor.</p>';
+  }
+}
+
+function toggleSeleccionServicio(id) {
+  const index = Estado.serviciosIdsSeleccionados.indexOf(id);
+  const el = document.getElementById(`btn-serv-${id}`);
+  
+  if (index > -1) {
+    Estado.serviciosIdsSeleccionados.splice(index, 1);
+    el.classList.remove('seleccionado');
+  } else {
+    Estado.serviciosIdsSeleccionados.push(id);
+    el.classList.add('seleccionado');
+  }
+
+  // Recalcular propina si está en modo porcentual
+  calcularTotalesFactura();
+}
+
+function seleccionarMetodoPago(id) {
+  document.querySelectorAll('.btn-pago-factura').forEach(btn => btn.classList.remove('seleccionado'));
+  const el = document.getElementById(`btn-pago-${id}`);
+  if (el) el.classList.add('seleccionado');
+  Estado.metodoPagoSeleccionadoId = id;
+}
+
+// Manejo de propinas
+function cambiarPropinaRapida(porcentaje, el) {
+  document.querySelectorAll('.btn-propina').forEach(btn => btn.classList.remove('seleccionado'));
+  el.classList.add('seleccionado');
+
+  Estado.propinaSeleccionadaPorcentaje = porcentaje;
+  document.getElementById('factura-propina-val').style.display = 'none';
+
+  calcularTotalesFactura();
+}
+
+function activarPropinaPersonalizada(el) {
+  document.querySelectorAll('.btn-propina').forEach(btn => btn.classList.remove('seleccionado'));
+  el.classList.add('seleccionado');
+
+  Estado.propinaSeleccionadaPorcentaje = -1; // Modo personalizado
+  const input = document.getElementById('factura-propina-val');
+  input.style.display = 'block';
+  input.value = '';
+  input.focus();
+
+  calcularTotalesFactura();
+}
+
+function calcularTotalesFactura() {
+  const servicios = Estado.serviciosDisponibles.filter(s => Estado.serviciosIdsSeleccionados.includes(s.id));
+  const subtotal = servicios.reduce((acc, s) => acc + s.precio, 0);
+
+  let propina = 0;
+  if (Estado.propinaSeleccionadaPorcentaje > -1) {
+    propina = subtotal * Estado.propinaSeleccionadaPorcentaje;
+  } else {
+    propina = parseFloat(document.getElementById('factura-propina-val').value) || 0;
+  }
+
+  const total = subtotal + propina;
+
+  // Actualizar UI
+  document.getElementById('factura-subtotal-txt').textContent = `${subtotal.toLocaleString('es-CO')} COP`;
+  document.getElementById('factura-propina-txt').textContent = `${propina.toLocaleString('es-CO')} COP`;
+  document.getElementById('factura-total-txt').textContent = `${total.toLocaleString('es-CO')} COP`;
+
+  // Validaciones de Control de Propinas
+  const advertencia = document.getElementById('propina-advertencia');
+  const btnFacturar = document.getElementById('btn-registrar-factura');
+  
+  const limitePorcentaje = subtotal * 0.30;
+  const limiteAbsoluto = 50000;
+  const limitePropina = Math.max(limitePorcentaje, 10000);
+
+  if (propina > limitePropina && propina > limiteAbsoluto && subtotal > 0) {
+    advertencia.textContent = `⚠️ Límite de propina excedido. La propina máxima permitida es de ${Math.min(limitePropina, limiteAbsoluto).toLocaleString('es-CO')} COP (Max 30% del servicio).`;
+    advertencia.style.display = 'block';
+    btnFacturar.disabled = true;
+    btnFacturar.style.opacity = '0.5';
+    btnFacturar.style.cursor = 'not-allowed';
+  } else {
+    advertencia.style.display = 'none';
+    btnFacturar.disabled = false;
+    btnFacturar.style.opacity = '1';
+    btnFacturar.style.cursor = 'pointer';
+  }
+}
+
+// Envío de Facturación
+document.getElementById('formulario-factura').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('factura-error');
+  const ex = document.getElementById('factura-exito');
+  err.style.display = 'none';
+  ex.style.display = 'none';
+
+  if (Estado.serviciosIdsSeleccionados.length === 0) {
+    err.textContent = 'Debes seleccionar al menos un servicio.';
+    err.style.display = 'block';
+    return;
+  }
+  if (!Estado.metodoPagoSeleccionadoId) {
+    err.textContent = 'Elige un método de pago.';
+    err.style.display = 'block';
+    return;
+  }
+
+  const subtotal = Estado.serviciosDisponibles
+    .filter(s => Estado.serviciosIdsSeleccionados.includes(s.id))
+    .reduce((acc, s) => acc + s.precio, 0);
+
+  let propinaVal = 0;
+  if (Estado.propinaSeleccionadaPorcentaje > -1) {
+    propinaVal = subtotal * Estado.propinaSeleccionadaPorcentaje;
+  } else {
+    propinaVal = parseFloat(document.getElementById('factura-propina-val').value) || 0;
+  }
+
+  try {
+    const { ok, datos } = await api('/api/barbero/registrar-trabajo', {
+      method: 'POST',
+      body: JSON.stringify({
+        serviciosIds: Estado.serviciosIdsSeleccionados,
+        metodoPagoId: Estado.metodoPagoSeleccionadoId,
+        referencia: document.getElementById('factura-referencia').value || null,
+        propina: propinaVal,
+        nombreCliente: document.getElementById('factura-cliente').value || null
+      })
+    });
+
+    if (ok) {
+      ex.textContent = '✔ Trabajo registrado y facturado correctamente.';
+      ex.style.display = 'block';
+      document.getElementById('formulario-factura').reset();
+      cargarElementosFacturacion(); // Recargar estados
+    } else {
+      err.textContent = datos.error || 'Error al guardar el trabajo.';
+      err.style.display = 'block';
+    }
+  } catch {
+    err.textContent = 'Error de conexión con el servidor.';
+    err.style.display = 'block';
+  }
+});
+
+// Cargar Historial Individual del Barbero
+async function cargarHistoricoBarbero() {
+  const tbody = document.getElementById('tbody-historico-barbero');
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Cargando tu historial...</td></tr>';
+  
+  try {
+    const { datos } = await api('/api/barbero/historico');
+    if (!datos || datos.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--color-texto-secundario);">No has registrado servicios aún.</td></tr>';
+      document.getElementById('barbero-sum-servicios').textContent = formatearMoneda(0);
+      document.getElementById('barbero-sum-propinas').textContent = formatearMoneda(0);
+      document.getElementById('barbero-sum-total').textContent = formatearMoneda(0);
+      return;
+    }
+
+    let sumServicios = 0;
+    let sumPropinas = 0;
+
+    tbody.innerHTML = datos.map(trans => {
+      const precioServ = trans.monto_cobrado; // El precio de cada servicio individual
+      const propina = trans.propina || 0;
+      const total = precioServ + propina;
+
+      sumServicios += precioServ;
+      sumPropinas += propina;
+
+      return `
+        <tr>
+          <td style="font-size:0.85rem;">${new Date(trans.fecha_pago).toLocaleString('es-ES')}</td>
+          <td><strong>${trans.cita.servicio.nombre}</strong></td>
+          <td style="color:var(--color-texto-secundario); font-size:0.85rem;">${trans.cita.nombre_cliente}</td>
+          <td>${trans.metodo_pago.nombre}</td>
+          <td style="font-family:monospace; font-size:0.85rem;">${trans.referencia || '—'}</td>
+          <td>${formatearMoneda(precioServ)}</td>
+          <td style="color:var(--color-exito);">${formatearMoneda(propina)}</td>
+          <td><strong>${formatearMoneda(total)}</strong></td>
+        </tr>
+      `;
+    }).join('');
+
+    // Actualizar sumatorias finales convertidas
+    document.getElementById('barbero-sum-servicios').textContent = formatearMoneda(sumServicios);
+    document.getElementById('barbero-sum-propinas').textContent = formatearMoneda(sumPropinas);
+    document.getElementById('barbero-sum-total').textContent = formatearMoneda(sumServicios + sumPropinas);
+
+  } catch {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--color-error);">Error al cargar histórico.</td></tr>';
+  }
+}
+
+// =============================================================
+// PANEL ADMINISTRADOR (NAVEGACIÓN Y EDICIÓN CRUD COMPLETA)
+// =============================================================
+function cambiarSeccion(id) {
+  document.querySelectorAll('.seccion-erp').forEach(s => s.classList.remove('activa'));
+  document.querySelectorAll('.menu-erp li').forEach(li => li.classList.remove('activo'));
+  
+  const seccion = document.getElementById(id);
+  if (seccion) seccion.classList.add('activa');
+  
+  document.querySelector(`[data-seccion="${id}"]`)?.classList.add('activo');
+
+  const cargas = {
+    'sec-dashboard': cargarDashboard,
+    'sec-barberos': () => { cancelarEdicionBarbero(); cargarBarberos(); },
+    'sec-servicios': () => { cancelarEdicionServicio(); cargarServicios(); },
+    'sec-metodos': () => { cancelarEdicionMetodo(); cargarMetodosPago(); },
+    'sec-auditoria': () => { cargarFiltrosBarberoAuditoria(); cargarAuditoria(); },
+    'sec-admin-ajustes': () => { cargarTasasServidor(); }
+  };
+  cargas[id]?.();
+}
+
+async function cargarDashboard() {
+  try {
+    const { datos } = await api('/api/admin/metricas');
+    document.getElementById('met-historico').textContent = `${(datos.totalHistorico || 0).toLocaleString('es-CO')} COP`;
+    document.getElementById('met-hoy').textContent = `${(datos.totalHoy || 0).toLocaleString('es-CO')} COP`;
+    document.getElementById('met-mes').textContent = `${(datos.totalMes || 0).toLocaleString('es-CO')} COP`;
+
+    const total = datos.totalHistorico || 1;
+    const barrasGraf = (obj, elId, color) => {
+      const el = document.getElementById(elId);
+      const entradas = Object.entries(obj);
+      if (entradas.length === 0) { el.innerHTML = '<p style="color:var(--color-texto-secundario); font-size:0.85rem;">Sin registros aún.</p>'; return; }
+      el.innerHTML = entradas.map(([nombre, monto]) => `
+        <div style="margin-bottom:0.8rem;">
+          <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:0.3rem;">
+            <span>${nombre}</span><strong>${monto.toLocaleString('es-CO')} COP</strong>
+          </div>
+          <div class="barra-progreso"><div class="barra-relleno ${color}" style="width:${Math.min((monto/total)*100,100)}%;"></div></div>
+        </div>
+      `).join('');
+    };
+    barrasGraf(datos.facturacionBarberos, 'grafica-barberos', '');
+    barrasGraf(datos.facturacionPorMetodo, 'grafica-metodos', 'verde');
+  } catch { console.error('Error al cargar dashboard.'); }
+}
+
+// -- Usuarios CRUD con Edición --
+async function cargarBarberos() {
+  const { datos } = await api('/api/admin/usuarios');
+  if (!Array.isArray(datos)) return;
+
+  // Colores para los badges de rol — soporta roles dinámicos con un color genérico
+  function colorRol(rol) {
+    if (rol === 'ADMINISTRADOR') return 'badge-admin';
+    if (rol === 'BARBERO')       return 'badge-barbero';
+    if (rol === 'CAJERO')        return 'badge-cajero';
+    return 'badge-otro'; // Para cualquier rol personalizado futuro
+  }
+
+  document.getElementById('tbody-barberos').innerHTML = datos.map(b => `
+    <tr>
+      <td>#${b.id}</td>
+      <td><strong>${b.nombre}</strong></td>
+      <td>${b.usuario}</td>
+      <td><span class="badge ${colorRol(b.rol)}">${b.rol}</span></td>
+      <td><span class="badge ${b.activo ? 'badge-activo' : 'badge-inactivo'}">${b.activo ? 'Activo' : 'Inactivo'}</span></td>
+      <td>
+        <button class="btn-toggle-estado ${b.activo ? 'activo' : 'inactivo'}"
+          onclick="toggleBarbero(${b.id}, ${!b.activo})"
+          title="${b.activo ? 'Haz clic para desactivar' : 'Haz clic para activar'}">
+          ${b.activo ? '✅ Activo — clic desactivar' : '🚫 Inactivo — clic activar'}
+        </button>
+      </td>
+      <td>
+        <div style="display:flex; gap:0.4rem;">
+          <button class="btn-sm btn-sm-azul" onclick="iniciarEdicionBarbero(${b.id}, '${b.nombre.replace(/'/g, '\\&apos;')}', '${b.usuario}', '${b.rol}')">Editar</button>
+          <button class="btn-sm btn-sm-rojo" onclick="eliminarBarberoDefinitivo(${b.id}, '${b.nombre.replace(/'/g, '\\&apos;')}')">🗑️ Eliminar</button>
+        </div>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="7" style="text-align:center; color:var(--color-texto-secundario);">No hay usuarios registrados.</td></tr>';
+}
+
+// Función para eliminar permanentemente un barbero del sistema
+async function eliminarBarberoDefinitivo(id, nombre) {
+  if (!confirm(`¿Estás completamente seguro de que deseas ELIMINAR permanentemente a "${nombre}"?\nEsta acción es irreversible y lo borrará por completo.`)) {
+    return;
+  }
+
+  try {
+    // Enviamos una petición DELETE real al endpoint de tu backend
+    const { ok, datos } = await api(`/api/admin/usuarios/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (ok) {
+      alert(`El barbero "${nombre}" ha sido eliminado permanentemente del sistema.`);
+      cargarBarberos(); // Recargamos la lista actualizada para ver el cambio inmediato
+    } else {
+      alert(datos.error || 'Error al eliminar el barbero.');
+    }
+  } catch (error) {
+    console.error('Error al conectar con el servidor:', error);
+    alert('No se pudo establecer conexión para eliminar al barbero.');
+  }
+}
+
+function iniciarEdicionBarbero(id, nombre, usuario, rol) {
+  document.getElementById('edit-barbero-id').value = id;
+  document.getElementById('nb-nombre').value = nombre;
+  document.getElementById('nb-usuario').value = usuario;
+  document.getElementById('nb-usuario').disabled = true;
+  document.getElementById('nb-contrasena').value = '';
+  document.getElementById('nb-contrasena').required = false;
+  document.getElementById('contenedor-nb-contrasena').style.display = 'none';
+
+  // Cargar el rol actual en el selector
+  const rolesBase = ['BARBERO', 'CAJERO', 'ADMINISTRADOR'];
+  const selectRol = document.getElementById('nb-rol');
+  if (rolesBase.includes(rol)) {
+    selectRol.value = rol;
+    verificarRolOtro(rol);
+  } else {
+    selectRol.value = 'OTRO';
+    verificarRolOtro('OTRO');
+    document.getElementById('nb-rol-otro').value = rol;
+  }
+
+  document.getElementById('titulo-form-barbero').textContent = `Editar Usuario #${id}`;
+  document.getElementById('btn-guardar-barbero').textContent = '💾 Guardar Cambios';
+  document.getElementById('btn-cancelar-barbero').style.display = 'inline-block';
+
+  document.getElementById('form-nuevo-barbero').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelarEdicionBarbero() {
+  document.getElementById('edit-barbero-id').value = '';
+  document.getElementById('nb-nombre').value = '';
+  document.getElementById('nb-usuario').value = '';
+  document.getElementById('nb-usuario').disabled = false;
+  document.getElementById('nb-contrasena').value = '';
+  document.getElementById('nb-contrasena').required = true;
+  document.getElementById('contenedor-nb-contrasena').style.display = 'flex';
+  document.getElementById('label-nb-contrasena').textContent = 'Contraseña Inicial';
+
+  // Resetear el selector de rol
+  document.getElementById('nb-rol').value = 'BARBERO';
+  verificarRolOtro('BARBERO');
+
+  document.getElementById('titulo-form-barbero').textContent = 'Gestión de Usuarios';
+  document.getElementById('btn-guardar-barbero').textContent = '+ Crear Usuario';
+  document.getElementById('btn-cancelar-barbero').style.display = 'none';
+}
+
+document.getElementById('form-nuevo-barbero').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('edit-barbero-id').value;
+
+  // Determinar el rol final (puede ser uno de los predefinidos o un personalizado)
+  const selectRolVal = document.getElementById('nb-rol').value;
+  const rolFinal = selectRolVal === 'OTRO'
+    ? document.getElementById('nb-rol-otro').value.trim().toUpperCase()
+    : selectRolVal;
+
+  if (!rolFinal) {
+    alert('Debes especificar el rol del usuario.');
+    return;
+  }
+
+  const body = {
+    nombre:  document.getElementById('nb-nombre').value,
+    usuario: document.getElementById('nb-usuario').value,
+    rol:     rolFinal
+  };
+
+  const contrasenaVal = document.getElementById('nb-contrasena').value;
+  if (contrasenaVal.trim() !== '') {
+    body.contrasena = contrasenaVal;
+  }
+
+  const endpoint = id ? `/api/admin/usuarios/${id}` : '/api/admin/usuarios';
+  const method   = id ? 'PUT' : 'POST';
+
+  const { ok, datos } = await api(endpoint, { method, body: JSON.stringify(body) });
+  if (ok) {
+    cancelarEdicionBarbero();
+    cargarBarberos();
+  } else {
+    alert(datos.error || 'Error al guardar usuario.');
+  }
+});
+
+async function toggleBarbero(id, activar) {
+  const accion = activar ? 'activar' : 'desactivar';
+  if (!confirm(`¿Deseas ${accion} este barbero?`)) return;
+
+  // Ahora mandamos PUT para activar (true) y PUT para desactivar (false)
+  // De esta forma NO chocamos con el DELETE de eliminar permanentemente
+  const op = {
+    method: 'PUT',
+    body: JSON.stringify({ activo: activar })
+  };
+
+  const { ok, datos } = await api(`/api/admin/usuarios/${id}`, op);
+  if (!ok) { alert(datos.error || `Error al ${accion} barbero.`); return; }
+  cargarBarberos();
+}
+
+// =============================================================
+// FUNCIONES NUEVAS SPRINT 4
+// =============================================================
+
+// --- Muestra/Oculta el campo de rol personalizado ---
+function verificarRolOtro(val) {
+  const cont  = document.getElementById('contenedor-nb-rol-otro');
+  const input = document.getElementById('nb-rol-otro');
+  if (!cont || !input) return;
+  if (val === 'OTRO') {
+    cont.style.display = 'block';
+    input.required = true;
+  } else {
+    cont.style.display = 'none';
+    input.required = false;
+    input.value = '';
+  }
+}
+
+// --- Toggle ojo en campos de contraseña ---
+function toggleOjo(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = '🙈'; // ojo tapado = contraseña visible
+    btn.title = 'Ocultar contraseña';
+  } else {
+    inp.type = 'password';
+    btn.textContent = '👁'; // ojo abierto = contraseña oculta
+    btn.title = 'Mostrar contraseña';
+  }
+}
+
+// --- Citas pendientes del barbero (notificaciones) ---
+async function cargarCitasPendientes() {
+  const contenedor = document.getElementById('lista-citas-pendientes');
+  const badge = document.getElementById('badge-citas');
+  if (!contenedor) return;
+
+  try {
+    const { ok, datos } = await api('/api/barbero/citas-pendientes');
+    if (!ok || !Array.isArray(datos)) {
+      contenedor.innerHTML = '<p style="color:var(--color-error);">Error al cargar las citas.</p>';
+      return;
+    }
+
+    // Actualizar el badge
+    if (badge) {
+      if (datos.length > 0) {
+        badge.textContent = datos.length;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    if (datos.length === 0) {
+      contenedor.innerHTML = `
+        <div style="text-align:center; padding:2rem; color:var(--color-texto-secundario);">
+          <div style="font-size:2.5rem; margin-bottom:0.5rem;">✅</div>
+          <p>No tienes citas pendientes por el momento.</p>
+        </div>`;
+      return;
+    }
+
+    const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    contenedor.innerHTML = datos.map(cita => {
+      const fecha = new Date(cita.fecha + 'T00:00:00');
+      const diaLabel = DIAS[fecha.getDay()];
+      const fechaLabel = fecha.toLocaleDateString('es-CO', { day:'2-digit', month:'long', year:'numeric' });
+      return `
+        <div class="tarjeta-cita" id="tarjeta-cita-${cita.id}">
+          <div class="tarjeta-cita-info">
+            <strong>👤 ${cita.nombre_cliente || 'Cliente sin nombre'}</strong>
+            <span>🕒 ${diaLabel} ${fechaLabel} a las <strong>${cita.hora}</strong></span>
+            <span>✂️ ${cita.servicio?.nombre || 'Servicio no especificado'}</span>
+            ${cita.telefono_cliente ? `<span>📱 ${cita.telefono_cliente}</span>` : ''}
+            ${cita.correo_cliente ? `<span>✉️ ${cita.correo_cliente}</span>` : ''}
+          </div>
+          <button class="btn btn-exito" style="font-size:0.85rem; padding:0.5rem 1rem;"
+            onclick="marcarCitaAtendida(${cita.id})">
+            ✔ Marcar como Atendida
+          </button>
+        </div>`;
+    }).join('');
+
+  } catch (err) {
+    console.error('Error al cargar citas pendientes:', err);
+    contenedor.innerHTML = '<p style="color:var(--color-error);">Error de conexión al cargar las citas.</p>';
+  }
+}
+
+async function marcarCitaAtendida(id) {
+  if (!confirm('¿Marcar esta cita como atendida?')) return;
+  const { ok, datos } = await api(`/api/barbero/citas/${id}/atender`, { method: 'PATCH' });
+  if (!ok) { alert(datos.error || 'Error al actualizar la cita.'); return; }
+  // Animar y remover la tarjeta
+  const tarjeta = document.getElementById(`tarjeta-cita-${id}`);
+  if (tarjeta) {
+    tarjeta.style.transition = 'opacity 0.4s, transform 0.4s';
+    tarjeta.style.opacity = '0';
+    tarjeta.style.transform = 'translateX(30px)';
+    setTimeout(() => cargarCitasPendientes(), 420);
+  } else {
+    cargarCitasPendientes();
+  }
+}
+
+// Actualización silenciosa del badge de notificaciones del barbero
+async function actualizarBadgeNotificacionesSilencioso() {
+  if (Estado.usuario?.rol !== 'BARBERO') return;
+  try {
+    const { ok, datos } = await api('/api/barbero/citas-pendientes');
+    const badge = document.getElementById('badge-citas');
+    if (!badge || !ok || !Array.isArray(datos)) return;
+    if (datos.length > 0) {
+      badge.textContent = datos.length;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (err) {
+    console.error('Error al actualizar silenciosamente el badge de citas:', err);
+  }
+}
+
+// Polling automático del badge cada 60 segundos
+setInterval(actualizarBadgeNotificacionesSilencioso, 60000);
+
+// -- Servicios CRUD con Edición --
+async function cargarServicios() {
+  const { datos } = await api('/api/admin/servicios');
+  document.getElementById('tbody-servicios').innerHTML = datos.map(s => `
+    <tr>
+      <td>#${s.id}</td>
+      <td><strong>${s.nombre}</strong></td>
+      <td style="color:var(--color-texto-secundario); font-size:0.9rem;">${s.descripcion}</td>
+      <td><strong>${s.precio.toLocaleString('es-CO')} COP</strong></td>
+      <td><span class="badge ${s.activo ? 'badge-activo' : 'badge-inactivo'}">${s.activo ? 'Activo' : 'Inactivo'}</span></td>
+      <td style="display:flex; gap:0.4rem;">
+        <button class="btn-sm btn-sm-azul" onclick="iniciarEdicionServicio(${s.id}, '${s.nombre}', '${s.descripcion}', ${s.precio})">Editar</button>
+        ${s.activo
+          ? `<button class="btn-sm btn-sm-rojo" onclick="toggleServicio(${s.id}, false)">Inactivar</button>`
+          : `<button class="btn-sm btn-sm-verde" onclick="toggleServicio(${s.id}, true)">Activar</button>`}
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" style="text-align:center; color:var(--color-texto-secundario);">Sin servicios registrados.</td></tr>';
+}
+
+function iniciarEdicionServicio(id, nombre, descripcion, precio) {
+  document.getElementById('edit-servicio-id').value = id;
+  document.getElementById('ns-nombre').value = nombre;
+  document.getElementById('ns-descripcion').value = descripcion;
+  document.getElementById('ns-precio').value = precio;
+
+  document.getElementById('titulo-form-servicio').textContent = `Editar Servicio #${id}`;
+  document.getElementById('btn-guardar-servicio').textContent = '💾 Guardar Cambios';
+  document.getElementById('btn-cancelar-servicio').style.display = 'inline-block';
+
+  document.getElementById('form-nuevo-servicio').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelarEdicionServicio() {
+  document.getElementById('edit-servicio-id').value = '';
+  document.getElementById('ns-nombre').value = '';
+  document.getElementById('ns-descripcion').value = '';
+  document.getElementById('ns-precio').value = '';
+
+  document.getElementById('titulo-form-servicio').textContent = 'Catálogo de Cortes y Combos (Servicios)';
+  document.getElementById('btn-guardar-servicio').textContent = '+ Agregar Servicio';
+  document.getElementById('btn-cancelar-servicio').style.display = 'none';
+}
+
+document.getElementById('form-nuevo-servicio').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('edit-servicio-id').value;
+
+  const body = {
+    nombre: document.getElementById('ns-nombre').value,
+    descripcion: document.getElementById('ns-descripcion').value,
+    precio: parseFloat(document.getElementById('ns-precio').value)
+  };
+
+  const endpoint = id ? `/api/admin/servicios/${id}` : '/api/admin/servicios';
+  const method = id ? 'PUT' : 'POST';
+
+  const { ok, datos } = await api(endpoint, { method, body: JSON.stringify(body) });
+  if (ok) {
+    cancelarEdicionServicio();
+    cargarServicios();
+  } else {
+    alert(datos.error || 'Error al guardar el servicio.');
+  }
+});
+
+async function toggleServicio(id, activar) {
+  const op = activar
+    ? { method: 'PUT', body: JSON.stringify({ activo: true }) }
+    : { method: 'DELETE' };
+  await api(`/api/admin/servicios/${id}`, op);
+  cargarServicios();
+}
+
+// -- Métodos de Pago CRUD con Edición --
+async function cargarMetodosPago() {
+  const { datos } = await api('/api/admin/metodos-pago');
+  document.getElementById('tbody-metodos').innerHTML = datos.map(m => `
+    <tr>
+      <td>#${m.id}</td>
+      <td><strong>${m.nombre}</strong></td>
+      <td><span class="badge ${m.activo ? 'badge-activo' : 'badge-inactivo'}">${m.activo ? 'Activo' : 'Inactivo'}</span></td>
+      <td style="display:flex; gap:0.4rem;">
+        <button class="btn-sm btn-sm-azul" onclick="iniciarEdicionMetodo(${m.id}, '${m.nombre}')">Editar</button>
+        ${m.activo
+          ? `<button class="btn-sm btn-sm-rojo" onclick="toggleMetodo(${m.id}, false)">Inactivar</button>`
+          : `<button class="btn-sm btn-sm-verde" onclick="toggleMetodo(${m.id}, true)">Activar</button>`}
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--color-texto-secundario);">Sin métodos registrados.</td></tr>';
+}
+
+function iniciarEdicionMetodo(id, nombre) {
+  document.getElementById('edit-metodo-id').value = id;
+  document.getElementById('nm-nombre').value = nombre;
+
+  document.getElementById('titulo-form-metodo').textContent = `Editar Método #${id}`;
+  document.getElementById('btn-guardar-metodo').textContent = '💾 Guardar Cambios';
+  document.getElementById('btn-cancelar-metodo').style.display = 'inline-block';
+}
+
+function cancelarEdicionMetodo() {
+  document.getElementById('edit-metodo-id').value = '';
+  document.getElementById('nm-nombre').value = '';
+
+  document.getElementById('titulo-form-metodo').textContent = 'Métodos de Pago';
+  document.getElementById('btn-guardar-metodo').textContent = '+ Agregar Método';
+  document.getElementById('btn-cancelar-metodo').style.display = 'none';
+}
+
+document.getElementById('form-nuevo-metodo').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const id = document.getElementById('edit-metodo-id').value;
+
+  const body = {
+    nombre: document.getElementById('nm-nombre').value
+  };
+
+  const endpoint = id ? `/api/admin/metodos-pago/${id}` : '/api/admin/metodos-pago';
+  const method = id ? 'PUT' : 'POST';
+
+  const { ok, datos } = await api(endpoint, { method, body: JSON.stringify(body) });
+  if (ok) {
+    cancelarEdicionMetodo();
+    cargarMetodosPago();
+  } else {
+    alert(datos.error || 'Error al guardar método.');
+  }
+});
+
+async function toggleMetodo(id, activar) {
+  const op = activar
+    ? { method: 'PUT', body: JSON.stringify({ activo: true }) }
+    : { method: 'DELETE' };
+  await api(`/api/admin/metodos-pago/${id}`, op);
+  cargarMetodosPago();
+}
+
+// -- Auditoría con Convertidor de Moneda --
+async function cargarFiltrosBarberoAuditoria() {
+  const { datos } = await api('/api/admin/usuarios');
+  const sel = document.getElementById('filtro-barbero-id');
+  sel.innerHTML = '<option value="">Todos</option>' +
+    datos.map(b => `<option value="${b.id}">${b.nombre}</option>`).join('');
+}
+
+async function cargarAuditoria() {
+  const barberoId = document.getElementById('filtro-barbero-id').value;
+  const dia       = document.getElementById('filtro-dia').value;
+  const mes       = document.getElementById('filtro-mes').value;
+  const anio      = document.getElementById('filtro-anio').value;
+
+  const params = new URLSearchParams();
+  if (barberoId) params.append('barberoId', barberoId);
+  if (dia)       params.append('dia', dia);
+  if (mes)       params.append('mes', mes);
+  if (anio)      params.append('anio', anio);
+
+  try {
+    const { datos } = await api(`/api/admin/auditoria?${params}`);
+
+    // Ventas
+    const tVentas = document.getElementById('tbody-ventas');
+    if (!datos.auditoriaVentas?.length) {
+      tVentas.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--color-texto-secundario);">Sin ventas para estos filtros.</td></tr>';
+    } else {
+      tVentas.innerHTML = datos.auditoriaVentas.map(v => {
+        const monto = v.monto_cobrado;
+        const propina = v.propina || 0;
+        const total = monto + propina;
+
+        return `
+          <tr>
+            <td style="font-size:0.85rem;">${new Date(v.fecha_pago).toLocaleString('es-ES')}</td>
+            <td><strong>${v.cita.barbero.nombre}</strong></td>
+            <td>${v.cita.servicio.nombre}</td>
+            <td style="color:var(--color-texto-secundario); font-size:0.85rem;">${v.cita.nombre_cliente}</td>
+            <td>${v.metodo_pago.nombre}</td>
+            <td style="font-family:monospace; font-size:0.85rem;">${v.referencia || '—'}</td>
+            <td>${formatearMoneda(monto)}</td>
+            <td style="color:var(--color-exito);">${formatearMoneda(propina)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Accesos
+    const tAccesos = document.getElementById('tbody-accesos');
+    if (!datos.auditoriaAccesos?.length) {
+      tAccesos.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--color-texto-secundario);">Sin logs registrados.</td></tr>';
+    } else {
+      const colores = { 'LOGIN': 'var(--color-acento)', 'REGISTRO_VENTA': 'var(--color-exito)', 'MODIFICACION_TEMA': 'var(--color-advertencia)', 'ACTUALIZACION_PERFIL': 'var(--color-acento)', 'ACTUALIZACION_TASAS': 'var(--color-exito)' };
+      tAccesos.innerHTML = datos.auditoriaAccesos.map(a => `
+        <tr>
+          <td style="font-size:0.85rem;">${new Date(a.fecha_registro).toLocaleString('es-ES')}</td>
+          <td><strong>${a.barbero.nombre}</strong></td>
+          <td><span style="color:${colores[a.accion] || 'white'}; font-weight:700; font-size:0.8rem;">${a.accion}</span></td>
+          <td style="font-size:0.85rem; color:var(--color-texto-secundario);">${a.detalles}</td>
+        </tr>
+      `).join('');
+    }
+  } catch { console.error('Error al cargar auditoría.'); }
+}
+
+function limpiarFiltros() {
+  document.getElementById('filtro-barbero-id').value = '';
+  document.getElementById('filtro-dia').value = '';
+  document.getElementById('filtro-mes').value = '';
+  document.getElementById('filtro-anio').value = new Date().getFullYear();
+  cargarAuditoria();
+}
+
+async function exportarAuditoria(tipo) {
+  const barberoId = document.getElementById('filtro-barbero-id').value;
+  const dia       = document.getElementById('filtro-dia').value;
+  const mes       = document.getElementById('filtro-mes').value;
+  const anio      = document.getElementById('filtro-anio').value;
+
+  const params = new URLSearchParams();
+  if (barberoId) params.append('barberoId', barberoId);
+  if (dia)       params.append('dia', dia);
+  if (mes)       params.append('mes', mes);
+  if (anio)      params.append('anio', anio);
+
+  const endpoint = tipo === 'pdf'
+    ? `/api/admin/auditoria/exportar-pdf?${params}`
+    : `/api/admin/auditoria/exportar-excel?${params}`;
+
+  try {
+    const resp = await fetch(endpoint, {
+      headers: { 'Authorization': `Bearer ${Estado.token}` }
+    });
+    if (!resp.ok) { alert('Error al generar el reporte.'); return; }
+    const blob = await resp.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = tipo === 'pdf' ? `auditoria_${Date.now()}.pdf` : `auditoria_${Date.now()}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    alert('Error de red al descargar el reporte.');
+  }
+}
+
+// =============================================================
+// INICIO: REVISAR SI HAY SESIÓN GUARDADA
+// =============================================================
+(async function iniciarApp() {
+  const tokenGuardado = localStorage.getItem('erp_token');
+  const usuarioGuardado = localStorage.getItem('erp_usuario');
+  
+  if (tokenGuardado && usuarioGuardado) {
+    try {
+      Estado.token = tokenGuardado;
+      Estado.usuario = JSON.parse(usuarioGuardado);
+      
+      let tema = Estado.usuario.preferencias_tema;
+      if (typeof tema === 'string') { try { tema = JSON.parse(tema); } catch {} }
+      if (tema) aplicarTema(tema);
+
+      await cargarTasasServidor();
+
+      if (Estado.usuario.rol === 'ADMINISTRADOR') {
+        document.getElementById('admin-nombre').textContent = Estado.usuario.nombre;
+        
+        document.getElementById('perf-admin-nombre').value = Estado.usuario.nombre;
+        document.getElementById('perf-admin-usuario').value = Estado.usuario.usuario;
+
+        mostrarVista('vista-admin');
+        cambiarSeccion('sec-dashboard');
+      } else {
+        document.getElementById('barbero-nombre').textContent = Estado.usuario.nombre;
+        
+        document.getElementById('perf-barbero-nombre').value = Estado.usuario.nombre;
+        document.getElementById('perf-barbero-usuario').value = Estado.usuario.usuario;
+
+        mostrarVista('vista-barbero');
+        cambiarSeccionBarbero('sec-barbero-facturacion');
+        actualizarBadgeNotificacionesSilencioso();
+      }
+    } catch (e) {
+      console.error(e);
+      localStorage.removeItem('erp_token');
+      localStorage.removeItem('erp_usuario');
+    }
+  }
+})();
+</script>
+</body>
+</html>

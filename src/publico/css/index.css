@@ -1,0 +1,851 @@
+/* Estilos unificados, responsivos y dinámicos para el ERP de la barbería */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('./variables.css');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+  font-family: var(--fuente-principal);
+  color: var(--color-texto);
+  overflow-x: hidden;
+}
+
+/* Contenedor de Entrada Unificado (Login / Registro / Bienvenida) */
+.contenedor-entrada {
+  max-width: 500px;
+  width: 90%;
+  margin: auto;
+  padding: 2.5rem 2rem;
+  border-radius: 24px;
+  border: 1px solid var(--color-borde);
+  box-shadow: var(--sombra-tarjeta);
+  text-align: center;
+  background: rgba(30, 41, 59, 0.45);
+  backdrop-filter: var(--difuminado-glass);
+  -webkit-backdrop-filter: var(--difuminado-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: deslizarEntrada 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes deslizarEntrada {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Estilo para el Logo de la Barbería */
+.contenedor-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.logo-imagen {
+  max-width: 180px;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radio-borde);
+  transition: transform 0.3s ease;
+  filter: drop-shadow(0 0 10px rgba(2, 132, 199, 0.3));
+}
+
+.logo-imagen:hover {
+  transform: scale(1.05);
+}
+
+/* Formularios Comunes */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-texto-secundario);
+}
+
+input, select, textarea {
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
+  color: var(--color-texto);
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-family: var(--fuente-principal);
+  outline: none;
+  transition: var(--transicion-suave);
+  width: 100%;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-acento);
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+}
+
+/* Botones */
+.btn {
+  background: var(--color-acento);
+  color: var(--color-texto);
+  border: none;
+  padding: 0.9rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transicion-suave);
+  text-align: center;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: var(--color-acento-hover);
+  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-secundario {
+  background: transparent;
+  border: 1px solid var(--color-borde);
+}
+
+.btn-secundario:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-texto);
+}
+
+.btn-llamativo {
+  background: linear-gradient(135deg, #0284c7, #3b82f6);
+  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+}
+
+.btn-llamativo:hover {
+  background: linear-gradient(135deg, #0369a1, #2563eb);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6);
+}
+
+.btn-peligro {
+  background: transparent;
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.btn-peligro:hover {
+  background: var(--color-error);
+  color: var(--color-texto);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-exito {
+  background: var(--color-exito);
+}
+
+.btn-exito:hover {
+  background: #059669;
+}
+
+/* ==========================================
+   SECCIÓN DE CLIENTES (RESERVAS)
+   ========================================== */
+.contenedor-reservas {
+  max-width: 900px;
+  width: 92%;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid var(--color-borde);
+  border-radius: 24px;
+  box-shadow: var(--sombra-tarjeta);
+  display: none; /* Dinámico */
+}
+
+/* Calendario Visual interactivo */
+.calendario-interactivo {
+  margin-bottom: 2rem;
+}
+
+.calendario-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.calendario-cabecera h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-acento);
+}
+
+.calendario-cuerpo {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  text-align: center;
+}
+
+.calendario-dia-cabecera {
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.5rem 0;
+  color: var(--color-texto-secundario);
+  text-transform: uppercase;
+}
+
+.calendario-dia {
+  padding: 0.8rem 0;
+  border-radius: 8px;
+  background: var(--color-tarjeta);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: var(--transicion-suave);
+  border: 1px solid transparent;
+}
+
+.calendario-dia:hover:not(.inactivo) {
+  border-color: var(--color-acento);
+  background: rgba(2, 132, 199, 0.1);
+}
+
+.calendario-dia.seleccionado {
+  background: var(--color-acento);
+  color: var(--color-texto);
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.4);
+}
+
+.calendario-dia.inactivo {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+/* Panel unificado Cita */
+.panel-unificado-reserva {
+  display: none; /* Se muestra al seleccionar fecha */
+  animation: fadeIn 0.4s ease;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .panel-unificado-reserva {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.grid-horas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+  gap: 0.6rem;
+}
+
+.slot-hora {
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+  padding: 0.7rem;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: var(--transicion-suave);
+}
+
+.slot-hora.disponible:hover {
+  border-color: var(--color-exito);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.slot-hora.seleccionada {
+  border-color: var(--color-acento);
+  background: var(--color-acento);
+  color: var(--color-texto);
+}
+
+.slot-hora.ocupado {
+  background: transparent;
+  border-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-texto-secundario);
+  text-decoration: line-through;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==========================================
+   INTERFAZ ADMINISTRADOR Y BARBERO (ERP)
+   ========================================== */
+.contenedor-erp {
+  display: none; /* Dinámico */
+  flex-direction: column;
+  width: 100%;
+  flex: 1;
+}
+
+.cabecera-erp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: var(--color-tarjeta);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.layout-erp {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  flex: 1;
+}
+
+@media (max-width: 900px) {
+  .layout-erp {
+    grid-template-columns: 1fr;
+  }
+  .sidebar-erp {
+    border-right: none !important;
+    border-bottom: 1px solid var(--color-borde);
+  }
+}
+
+.sidebar-erp {
+  background: rgba(30, 41, 59, 0.3);
+  border-right: 1px solid var(--color-borde);
+  padding: 1.5rem 1rem;
+}
+
+.menu-erp {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menu-erp li a {
+  display: block;
+  padding: 0.8rem 1rem;
+  color: var(--color-texto-secundario);
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transicion-suave);
+}
+
+.menu-erp li.activo a, .menu-erp li a:hover {
+  background: rgba(2, 132, 199, 0.15);
+  color: var(--color-acento);
+}
+
+.cuerpo-erp {
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.seccion-erp {
+  display: none;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.seccion-erp.activa {
+  display: flex;
+}
+
+/* Tablas Responsivas */
+.contenedor-tabla {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radio-borde);
+  border: 1px solid var(--color-borde);
+  box-shadow: var(--sombra-tarjeta);
+  background: var(--color-tarjeta);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+th, td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-borde);
+  text-align: left;
+}
+
+th {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--color-texto-secundario);
+  font-weight: 600;
+}
+
+/* Utilidades de Exportación */
+.cabecera-auditoria {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.botones-exportar {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Clases Comunes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.oculto {
+  display: none !important;
+}
+
+/* ==========================================
+   ESTILOS ADICIONALES REVOLUCIONARIOS
+   ========================================== */
+
+/* Botones de navegación del Barbero */
+.btn-menu-barbero {
+  background: transparent;
+  color: var(--color-texto-secundario);
+  border: 1px solid transparent;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: var(--transicion-suave);
+}
+.btn-menu-barbero:hover {
+  color: var(--color-texto);
+  background: rgba(255, 255, 255, 0.05);
+}
+.btn-menu-barbero.activo {
+  background: var(--color-acento);
+  color: var(--color-texto);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+}
+
+/* Grid de botones para selección de servicios en Facturación */
+.grid-botones-factura {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.btn-servicio-factura {
+  background: var(--color-tarjeta);
+  border: 2px solid var(--color-borde);
+  border-radius: 16px;
+  padding: 1.2rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transicion-suave);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.btn-servicio-factura:hover {
+  border-color: var(--color-acento);
+  transform: translateY(-2px);
+}
+.btn-servicio-factura.seleccionado {
+  border-color: var(--color-acento);
+  background: rgba(2, 132, 199, 0.08);
+  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.15);
+}
+.btn-servicio-factura .precio-tag {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-acento);
+}
+.btn-servicio-factura .nombre-tag {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+/* Grid de botones para selección de métodos de pago */
+.grid-pagos-factura {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.btn-pago-factura {
+  background: var(--color-tarjeta);
+  border: 2px solid var(--color-borde);
+  border-radius: 16px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transicion-suave);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.btn-pago-factura:hover {
+  border-color: var(--color-acento);
+}
+.btn-pago-factura.seleccionado {
+  border-color: var(--color-acento);
+  background: var(--color-acento);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+}
+
+/* Contenedor y botones de propina */
+.contenedor-propina-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.btn-propina {
+  flex: 1;
+  min-width: 80px;
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
+  color: var(--color-texto);
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transicion-suave);
+  text-align: center;
+}
+.btn-propina:hover {
+  border-color: var(--color-acento);
+}
+.btn-propina.seleccionado {
+  border-color: var(--color-acento);
+  background: rgba(2, 132, 199, 0.15);
+  color: var(--color-acento);
+}
+
+/* Convertidor de monedas interactivo (Selector de moneda) */
+.selector-moneda-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
+  padding: 0.4rem;
+  border-radius: 14px;
+  width: fit-content;
+}
+.label-moneda {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-texto-secundario);
+  padding: 0 0.5rem;
+}
+.btn-moneda {
+  background: transparent;
+  color: var(--color-texto-secundario);
+  border: none;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transicion-suave);
+}
+.btn-moneda:hover {
+  color: var(--color-texto);
+}
+.btn-moneda.activo {
+  background: var(--color-acento);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+}
+
+/* Packs de colores preestablecidos para temas */
+.packs-colores-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.btn-pack-color {
+  background: var(--color-tarjeta);
+  border: 2px solid var(--color-borde);
+  border-radius: 16px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: var(--transicion-suave);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+.btn-pack-color:hover {
+  border-color: var(--color-acento);
+  transform: translateY(-2px);
+}
+.btn-pack-color.seleccionado {
+  border-color: var(--color-acento);
+  background: rgba(2, 132, 199, 0.05);
+}
+.btn-pack-color .titulo-pack {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-texto);
+}
+.btn-pack-color .circulos-colores {
+  display: flex;
+  gap: 4px;
+}
+.btn-pack-color .circulo-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Subsecciones operativas */
+.subseccion-barbero {
+  display: none;
+  animation: fadeIn 0.4s ease;
+}
+.subseccion-barbero.activa {
+  display: block;
+}
+
+.contenedor-total-factura {
+  background: rgba(2, 132, 199, 0.05);
+  border: 1px dashed var(--color-acento);
+  border-radius: 14px;
+  padding: 1rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.fila-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+.fila-total.grande {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--color-acento);
+  border-top: 1px solid var(--color-borde);
+  padding-top: 0.5rem;
+}
+
+/* =====================================================
+   SPRINT 4: HEADER CENTRADO DEL BARBERO
+   ===================================================== */
+.header-barbero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem;
+  background: var(--color-tarjeta);
+  border-bottom: 1px solid var(--color-borde);
+  width: 100%;
+}
+
+.header-barbero-fila1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  width: 100%;
+}
+
+.header-barbero-fila2 {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.widget-tasas-barbero {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  background: rgba(255,255,255,0.04);
+  padding: 0.3rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid var(--color-borde);
+}
+
+.header-barbero-fila3 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+/* =====================================================
+   SPRINT 4: BADGE DE NOTIFICACIONES (CITAS)
+   ===================================================== */
+.btn-citas-badge {
+  position: relative;
+}
+
+.badge-notif {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--color-tarjeta);
+  animation: pulso-badge 1.5s infinite;
+  line-height: 1;
+}
+
+@keyframes pulso-badge {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0.7); }
+  50%        { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+}
+
+/* Tarjeta de cita individual */
+.tarjeta-cita {
+  background: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
+  justify-content: space-between;
+  transition: border-color 0.2s;
+}
+
+.tarjeta-cita:hover {
+  border-color: var(--color-acento);
+}
+
+.tarjeta-cita-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tarjeta-cita-info strong {
+  font-size: 1rem;
+  color: var(--color-acento);
+}
+
+.tarjeta-cita-info span {
+  font-size: 0.85rem;
+  color: var(--color-texto-secundario);
+}
+
+/* =====================================================
+   SPRINT 4: BOTÓN OJO EN CAMPOS DE CONTRASEÑA
+   ===================================================== */
+.campo-contrasena {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.campo-contrasena input {
+  width: 100%;
+  padding-right: 2.8rem !important;
+}
+
+.btn-ojo {
+  position: absolute;
+  right: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--color-texto-secundario);
+  padding: 0.2rem;
+  line-height: 1;
+  transition: color 0.2s, transform 0.15s;
+  user-select: none;
+}
+
+.btn-ojo:hover {
+  color: var(--color-acento);
+  transform: scale(1.15);
+}
+
+/* =====================================================
+   SPRINT 4: TOGGLE ESTADO BARBERO (ACTIVO/INACTIVO)
+   ===================================================== */
+.btn-toggle-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle-estado.activo {
+  background: rgba(16,185,129,0.15);
+  color: #10b981;
+  border: 1px solid rgba(16,185,129,0.4);
+}
+
+.btn-toggle-estado.activo:hover {
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
+  border-color: rgba(239,68,68,0.4);
+}
+
+.btn-toggle-estado.inactivo {
+  background: rgba(239,68,68,0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239,68,68,0.35);
+}
+
+.btn-toggle-estado.inactivo:hover {
+  background: rgba(16,185,129,0.15);
+  color: #10b981;
+  border-color: rgba(16,185,129,0.4);
+}
