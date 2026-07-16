@@ -403,7 +403,11 @@
         </div>
 
         <p style="font-size:0.9rem; color:var(--color-texto-secundario); margin-bottom:1.5rem;">Aquí visualizas únicamente los servicios que tú has registrado hoy e históricamente.</p>
-        
+
+        <div class="form-check form-switch ms-auto d-inline-flex align-items-center gap-2" style="color: #fff;">
+        <input class="form-check-input" type="checkbox" id="toggleComisiones" checked>
+        <label class="form-check-label" for="toggleComisiones">Ver comisiones (60%/40%)</label>
+        </div>
         <div class="contenedor-tabla">
           <table>
             <thead>
@@ -414,6 +418,8 @@
                 <th>Método de Pago</th>
                 <th>Referencia</th>
                 <th>Monto Servicio</th>
+                <th class="col-comision">Ganancia Barbero (60%)</th>
+                <th class="col-comision">Comisión Barbería (40%)</th>
                 <th>Propina</th>
                 <th>Total Cobrado</th>
               </tr>
